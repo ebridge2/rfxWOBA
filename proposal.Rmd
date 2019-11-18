@@ -60,6 +60,9 @@ header-includes:
 
 * The primary goal of the project is to utilize Statcast data to assess batter quality from the distribution of their batted balls
 * To do this, we will apply methods to predict probabilities of each outcome based on batted ball attributes from the statcast data
+    + Random forest
+    + Kernel density estimator
+    + Bayesian hierarchical models
 * Primary predictors of interest
     + Launch speed: velocity of batted ball off the bat
     + Launch angle: angle of batted ball off the bat (relative to plane parallel to the ground)
@@ -67,8 +70,10 @@ header-includes:
     + Sprint speed: top sprint speed of the batter
 * Other potential predictors of interest
     + Stadium
-    + Defensive alignment: infield and outfield shifts
+    + Defense and defensive alignment: team, infield and outfield shifts
     + Pitch attributes: velocity, spin, location, break, etc.
+* We will express batter quality as an expectation of wOBA based on the Statcast data of their batted ball events
+* Using this metric, we can evaluate if a given batter's expected wOBA is a better predictor of their future performance than their actual wOBA
     
 ##DAG
 
