@@ -1,0 +1,98 @@
+---
+author: Joe Catallini, Eric Bridgeford, Brian Gilbert, Jennifer Xu
+output: 
+  slidy_presentation
+title: Assessing MLB Batter Ability using Statcast Data
+header-includes:
+  \usepackage{setspace}
+  \onehalfspacing 
+  \usepackage{amsmath}
+  \usepackage{tikz}
+  \usepackage{bm}
+---
+
+##Introduction
+
+* Baseball has long attracted statisticians as a sport
+* Many aspects of baseball can be thought of as quasi-iid trials (pitches, plate appearances, defensive plays, etc.) with specific conditions (count, inning, score, etc.)
+* Until recently, statistics used to assess the performance of batters have been outcome based (consider the following 7)
+    + Strikeout*
+    + Walk/Hit by pitch*
+    + Field out
+    + Single
+    + Double
+    + Triple
+    + Homerun**
+    
+*completely determined by pitcher and batter
+
+**almost completely determined by pitcher and batter (stadium effects and inside the park homeruns)
+
+##Brief History of Batter Performance Statistics
+
+* Batting Average (BA): Hits per at-bat
+    + Ignores walks and hit by pitches
+    + Treats every hit equally
+* Slugging Percentage (SLG): Total bases per at-bats
+    + Ignores walks and hit by pitches
+    + Weights singles, doubles, triples, homeruns (1, 2, 3, 4)
+* On-base Percentage (OBP): Total "reach-base-safely" per plate appearance
+    + Incorporates walks and hit by pitches
+    + Treats every "reach-base-safely" event equally
+* OPS
+    + OBP + SLG
+* Weighted On-base Average (wOBA)
+    + Incorporates walks and hit by pitches
+    + Regression of historical data assigns linear weights based on expected run values of each event
+    + Projects weights to approximate OBP distribution (for interpretability)
+    + Weighted average of events per plate appearance
+    
+##Statcast
+
+* Each of these new statistics may have been an improvement, however they all still rely on outcomes 
+* Batted ball outcomes (most notably field outs, singles, doubles, and triples) are influenced by factors outside the batter's control (defensive positioning and proficiency, stadium effects, etc.)
+* Beginning in 2015, a new technology called Statcast was introduced to the MLB which gathered data using high speed cameras to track the ball and players
+* [Baseball Savant](baseballsavant.mlb.com) has a processed version of the raw data available for public export
+* The exportable data includes attributes of each batted ball, the associated pitch, and much, much more
+* We have acquired this data from the 2017-2019 season (>500,000 events)
+
+##Project goal
+
+* The primary goal of the project is to utilize Statcast data to assess batter quality from the distribution of their batted balls
+* To do this, we will apply methods to predict probabilities of each outcome based on batted ball attributes from the statcast data
+* Primary predictors of interest
+    + Launch speed: velocity of batted ball off the bat
+    + Launch angle: angle of batted ball off the bat (relative to plane parallel to the ground)
+    + Spray angle: angle of direction of the batted ball (with respect to the field)
+    + Sprint speed: top sprint speed of the batter
+* Other potential predictors of interest
+    + Stadium
+    + Defensive alignment: infield and outfield shifts
+    + Pitch attributes: velocity, spin, location, break, etc.
+    
+##DAG
+
+```{r message=F, warning=F, echo=F, fig.align='center'}
+library(ggdag)
+dag<-dagify(BattedBall~BatterQuality+PitchQuality,
+            Outcome~BattedBall+Defense+Stadium+Noise,
+            latent = "BatterQuality",
+            outcome = "Outcome",
+            exposure = c("BattedBall",
+                         "PitchQuality",
+                         "Stadium",
+                         "Noise",
+                         "Defense"))
+dag.tidy <- tidy_dagitty(dag)
+ggdag_status(dag.tidy, layout="circle", text_col="black") +
+  theme_dag() +
+  theme(legend.position = "none")
+```
+
+##Figure
+
+```{r message=F, warning=F, echo=F, fig.height=9, fig.width=9, fig.align='center'}
+library(imager)
+img <- load.image('./BattedBalls.png')
+plot(img, axes=FALSE)
+```
