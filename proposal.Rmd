@@ -81,7 +81,6 @@ dag<-dagify(BattedBall~BatterQuality+PitchQuality,
             exposure = c("BattedBall",
                          "PitchQuality",
                          "Stadium",
-                         "Noise",
                          "Defense"))
 dag.tidy <- tidy_dagitty(dag)
 ggdag_status(dag.tidy, layout="circle", text_col="black") +
