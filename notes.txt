@@ -1,0 +1,5 @@
+https://tht.fangraphs.com/research-notebook-new-format-for-statcast-data-export-at-baseball-savant/
+
+dat$hc_x <- as.numeric(dat$hc_x)
+dat$hc_y <- as.numeric(dat$hc_y)
+dat <- dat %>% mutate(spray_angle=atan((hc_x-125.42)/(198.27-hc_y))*180/pi*0.75)
