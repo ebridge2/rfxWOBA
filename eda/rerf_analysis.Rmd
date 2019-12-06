@@ -81,6 +81,7 @@ Y.labs <- unique(Y)
 
 # cross validation loop
 res.xv <- lapply(1:length(xv.sets), function(i) {
+  print(i)
   xv.set <- xv.sets[[i]]
   X.train <- X[xv.set$train,]; Y.train <- Y[xv.set$train]; X.test <- X[xv.set$test,]; Y.test <- Y[xv.set$test]
   forest <- RerF(X.train, Y.train, num.cores=no_cores, cat.map = cat.map)
