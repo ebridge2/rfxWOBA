@@ -73,7 +73,7 @@ fixInNamespace("Predict", ns="rerf")
 
 ```{r execute_rf}
 no_cores <- detectCores() - 1  # number of cores to parallelize over
-K <- 2  # number of folds for XV
+K <- 50  # number of folds for XV
 xv.sets <- lol.xval.split(X, Y, k=K)
 p <- ncol(X) # number of features in the data
 d <- ceiling(sqrt(p)) # number of features to sample at each split
@@ -84,7 +84,7 @@ res.xv <- lapply(1:length(xv.sets), function(i) {
   print(i)
   xv.set <- xv.sets[[i]]
   X.train <- X[xv.set$train,]; Y.train <- Y[xv.set$train]; X.test <- X[xv.set$test,]; Y.test <- Y[xv.set$test]
-  forest <- RerF(X.train, Y.train, num.cores=no_cores, cat.map = cat.map)
+  forest <- RerF(X.train, Y.train, num.cores=no_cores, FUN=RandMatRF, cat.map = cat.map)
   Y.hat <- rerf::Predict(X.test, forest, num.cores=1L, Xtrain = X.train)
   conf.mtx <- lapply(Y.labs, function(y.true) {
     # obtain indices corresponding to the true label
@@ -118,7 +118,7 @@ conf.mtx <- lapply(res.xv, function(res) res$conf.mtx) %>%
 dat.overall <- lapply(res.xv, function(res) res$dat.overall) %>%
   bind_rows()
 
-forest <- RerF(X, Y, num.cores=no_cores, cat.map=cat.map, store.impurity=TRUE)
+forest <- RerF(X, Y, num.cores=no_cores, cat.map=cat.map, FUN=RandMatRF, store.impurity=TRUE)
 feature.imp.R <- FeatureImportance(forest, num.cores=no_cores, type="R")
 feature.imp.C <- FeatureImportance(forest, num.cores=no_cores, type="C")
 feature.imp.E <- FeatureImportance(forest, num.cores=no_cores, type="E")
