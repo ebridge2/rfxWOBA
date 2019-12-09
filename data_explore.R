@@ -41,16 +41,71 @@ dat %>% ggplot(aes(x = strikes,
 dev.off()
 
 
-
-
-
-
-
-
-
-
-
-
+## defence-related qualities
+## def2
+dat %>% ggplot(aes(x = factor(outcome, levels=c("Out","Single","Double","Triple","Home run")), y = def2)) + 
+  geom_boxplot()+
+  ylim(-50, 50)+
+  labs(y = "Def2", x = "Outcome")+
+  ggtitle("Distribution of Defense variable 2")
+## def3
+dat %>% ggplot(aes(x = factor(outcome, levels=c("Out","Single","Double","Triple","Home run")), y = def3)) + 
+  geom_boxplot()+
+  ylim(-20, 20)+
+  labs(y = "Def3", x = "Outcome")+
+  ggtitle("Distribution of Defense variable 3")
+## def4
+dat %>% ggplot(aes(x = factor(outcome, levels=c("Out","Single","Double","Triple","Home run")), y = def4)) + 
+  geom_boxplot()+
+  ylim(-25, 25)+
+  labs(y = "Def4", x = "Outcome")+
+  ggtitle("Distribution of Defense variable 4")
+## def5
+dat %>% ggplot(aes(x = factor(outcome, levels=c("Out","Single","Double","Triple","Home run")), y = def5)) + 
+  geom_boxplot()+
+  ylim(-25, 25)+
+  labs(y = "Def5", x = "Outcome")+
+  ggtitle("Distribution of Defense variable 5")
+## def6
+dat %>% ggplot(aes(x = factor(outcome, levels=c("Out","Single","Double","Triple","Home run")), y = def6)) + 
+  geom_boxplot()+
+  ylim(-30, 30)+
+  labs(y = "Def6", x = "Outcome")+
+  ggtitle("Distribution of Defense variable 6")
+## def7
+dat %>% ggplot(aes(x = factor(outcome, levels=c("Out","Single","Double","Triple","Home run")), y = def7)) + 
+  geom_boxplot()+
+  ylim(-35, 35)+
+  labs(y = "Def7", x = "Outcome")+
+  ggtitle("Distribution of Defense variable 7")
+## def8
+dat %>% ggplot(aes(x = factor(outcome, levels=c("Out","Single","Double","Triple","Home run")), y = def8)) + 
+  geom_boxplot()+
+  ylim(-35, 35)+
+  labs(y = "Def8", x = "Outcome")+
+  ggtitle("Distribution of Defense variable 8")
+## def9
+dat %>% ggplot(aes(x = factor(outcome, levels=c("Out","Single","Double","Triple","Home run")), y = def9)) + 
+  geom_boxplot()+
+  ylim(-35, 35)+
+  labs(y = "Def9", x = "Outcome")+
+  ggtitle("Distribution of Defense variable 9")
+## sum(def1-9)
+dat$sum_def <- rowSums(dat[, paste0("def", 1:9)])
+dat %>%
+  ggplot(aes(x = factor(outcome, levels=c("Out","Single","Double","Triple","Home run")), y = sum_def)) + 
+  geom_boxplot()+
+  labs(y = "Sum of the defense variables", x = "Outcome")+
+  ylim(-150, 150)+
+  ggtitle("Distribution of the sum of Defense variables 1-9")
+## sd(def1-9)
+dat$sd_def <- apply(dat[, paste0("def", 1:9)], 1, function(x) sd(x))
+dat %>%
+  ggplot(aes(x = factor(outcome, levels=c("Out","Single","Double","Triple","Home run")), y = sd_def)) + 
+  geom_boxplot()+
+  labs(y = "SD of the defense variables", x = "Outcome")+
+  ylim(0, 25)+
+  ggtitle("Distribution of the sum of Defense variables 1-9")
 
 
 
