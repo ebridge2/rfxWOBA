@@ -40,6 +40,15 @@ dat %>% ggplot(aes(x = strikes,
   ggtitle("Distribution of the number of strikes")
 dev.off()
 
+## sprint_speed -> outcome
+dat %>% ggplot(aes(x = sprint_speed, group = factor(outcome, levels=c("Out","Single","Double","Triple","Home run")), fill = factor(outcome, levels=c("Out","Single","Double","Triple","Home run"))))+
+  geom_density(alpha = 0.3)+
+  scale_fill_discrete(name = "Outcome")+
+  labs(y = "Density", fill="Outcome", x = "Sprint Speed")+
+  ggtitle("Dstribution of sprint speed")
+
+
+
 
 ## defence-related qualities
 ## def2
