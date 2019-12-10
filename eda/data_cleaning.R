@@ -133,22 +133,3 @@ dat.pred.batted <- dat.batted %>%
 
 write_csv(dat.pred, "model_data.csv")
 write_csv(dat.pred.batted, "model_data_batted.csv")
-
-png("BattedBalls.png")
-dat.batted %>% ggplot(aes(x=-(launch_angle+90), y=launch_speed, color=factor(outcome,
-                                                                             levels=c("Out",
-                                                                                      "Single",
-                                                                                      "Double",
-                                                                                      "Triple",
-                                                                                      "Home run")))) +
-  geom_point(alpha=0.025) +
-  coord_polar(theta="x") +
-  scale_x_continuous(limits = c(-180, 180),
-                     breaks = c(-180, -135, -90, -45, 0),
-                     labels = c(90, 45, 0, -45, -90)) +
-  labs(title="2017-19 Batted Balls",
-       x="Launch Angle",
-       y="Launch Speed",
-       color="Events") +
-  guides(color=guide_legend(override.aes=list(alpha=1)))
-dev.off()
