@@ -1,0 +1,129 @@
+---
+title: "Model Analysis"
+author: "Eric Bridgeford"
+date: "December 5, 2019"
+output: html_document
+---
+
+
+## Loading Data
+
+```{r package_load, message=FALSE}
+require(rerf)
+require(tidyverse)
+require(lolR)
+require(ggplot2)
+require(mltools)
+require(parallel)
+require(data.table)
+```
+
+```{r data_load}
+batted.dat <- read_csv('../data/cleaned/model_data_batted.csv')
+```
+
+```{r data_cc}
+colnames(batted.dat)
+print(sprintf("Fraction of Data Complete: %.4f", mean(complete.cases(batted.dat))))
+batted.dat.cc <- batted.dat[complete.cases(batted.dat),]
+```
+
+```{r data_clean}
+# select numeric features
+X.num <- batted.dat.cc %>%
+  select(-outcome, -pitch_name, -stadium, -if_fielding_alignment, -of_fielding_alignment) %>%
+  mutate(stand=as.numeric(stand == "R"), p_throws=as.numeric(p_throws == "R"),
+         inning_topbot=as.numeric(inning_topbot == "Top"), on_1b_bool=as.numeric(on_1b_bool),
+         on_2b_bool=as.numeric(on_2b_bool), on_3b_bool=as.numeric(on_3b_bool)) %>%
+  rename(batterRighty=stand, pitcherRighty=p_throws, inningTopHalf=inning_topbot, RO1b=on_1b_bool,
+         RO2b=on_2b_bool, RO3b=on_3b_bool)
+
+# one-hot encode categorical features
+X.cat <- batted.dat.cc %>%
+  select(pitch_name, stadium, if_fielding_alignment, of_fielding_alignment) %>%
+  mutate(pitch_name=factor(pitch_name, levels=unique(pitch_name)),
+         stadium=factor(stadium, levels=unique(stadium)),
+         if_fielding_alignment=factor(if_fielding_alignment, levels=unique(if_fielding_alignment)),
+         of_fielding_alignment=factor(of_fielding_alignment, levels=unique(of_fielding_alignment))) %>%
+  # rename with periods so that we can grab the categorical features later since they are OHE'd with _s
+  rename(if.fielding.alignment=if_fielding_alignment,
+         of.fielding.alignment=of_fielding_alignment) %>%
+  as.data.table() %>%
+  # one-hot encode the entire table
+  one_hot()
+
+# paste em together with categoricals all after numerics
+X <- cbind(X.num, X.cat)
+
+# identify which categorical features are where
+cat.map <- lapply(c("pitch.name", "stadium", "if.fielding.alignment",
+                    "of.fielding.alignment"), function(var) {
+  as.numeric(which(sapply(colnames(X), function(x) {grepl(var, x)})))
+})
+
+# obtain the outcome variable
+Y <- batted.dat.cc %>%
+  mutate(outcome=factor(outcome, levels=c("Out", "Single", "Double", "Triple", "Home run"))) %>%
+  pull(outcome)
+```
+
+```{r correct_bug}
+fixInNamespace("Predict", ns="rerf")
+```
+
+```{r execute_rf}
+no_cores <- detectCores() - 1  # number of cores to parallelize over
+K <- 50  # number of folds for XV
+xv.sets <- lol.xval.split(X, Y, k=K)
+p <- ncol(X) # number of features in the data
+d <- ceiling(sqrt(p)) # number of features to sample at each split
+Y.labs <- unique(Y)
+
+# cross validation loop
+res.xv <- lapply(1:length(xv.sets), function(i) {
+  print(i)
+  xv.set <- xv.sets[[i]]
+  X.train <- X[xv.set$train,]; Y.train <- Y[xv.set$train]; X.test <- X[xv.set$test,]; Y.test <- Y[xv.set$test]
+  forest <- RerF(X.train, Y.train, num.cores=no_cores, FUN=RandMatRF, cat.map = cat.map)
+  Y.hat <- rerf::Predict(X.test, forest, num.cores=1L, Xtrain = X.train)
+  conf.mtx <- lapply(Y.labs, function(y.true) {
+    # obtain indices corresponding to the true label
+    Y.test.true <- which(Y.test == y.true)
+    n.true <- length(Y.test.true)
+    lapply(Y.labs, function(y.pred) {
+      Y.test.pred <- which(Y.hat == y.pred)
+      # which indices with true label of y.true obtain a prediction of y.pred
+      Y.hat.true.pred <- intersect(Y.test.true, Y.test.pred)
+      n.true.pred <- length(Y.hat.true.pred)
+      
+      # record count and percentage
+      return(data.frame(fold=i, True=y.true, Prediction=y.pred, n=n.true, n.pred=n.true.pred,
+                        percent=n.true.pred/n.true))
+    }) %>%
+      bind_rows()
+  }) %>%
+    bind_rows()
+  acc.rt <- mean(Y.hat == Y.test)
+  # compare accuracy against the chance classifier which just guesses the maximally present class
+  # in the training data
+  labs.ct <- (Y.train %>% table())
+  Y.max <- names(labs.ct)[which(labs.ct == max(labs.ct))]
+  dat.overall <- data.frame(fold=i, accuracy=acc.rt, chance=mean(Y.test == Y.max))
+  return(list(conf.mtx=conf.mtx, dat.overall=dat.overall))
+})
+
+conf.mtx <- lapply(res.xv, function(res) res$conf.mtx) %>%
+  bind_rows()
+
+dat.overall <- lapply(res.xv, function(res) res$dat.overall) %>%
+  bind_rows()
+
+forest <- RerF(X, Y, num.cores=no_cores, cat.map=cat.map, FUN=RandMatRF, store.impurity=TRUE)
+feature.imp.R <- FeatureImportance(forest, num.cores=no_cores, type="R")
+feature.imp.C <- FeatureImportance(forest, num.cores=no_cores, type="C")
+feature.imp.E <- FeatureImportance(forest, num.cores=no_cores, type="E")
+
+saveRDS(list(conf.mtx=conf.mtx, overall=dat.overall, feature.imp=list(R=feature.imp.R, C=feature.imp.C, E=feature.imp.E)),
+        '../data/rf_results.rds')
+```
+
