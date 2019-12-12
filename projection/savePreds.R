@@ -1,13 +1,19 @@
-library(readr)
 library(tidyverse)
+library(readr)
+library(gridExtra)
 library(rerf)
-library(parallel)
 library(data.table)
 library(mltools)
+library(kableExtra)
+library(parallel)
 
-dat <- read_csv("../data/cleaned/model_data.csv")
+
 fit <- readRDS("../data/rf/fit_model.rds")
+dat <- read_csv("../data/cleaned/model_data.csv")
 
+predictions <- matrix(rep(NA*5), ncol=5)
+
+nCores <- detectCores() - 1
 
 # select numeric features
 X.num <- dat %>%
@@ -39,54 +45,17 @@ X <- cbind(X.num, X.cat)
 Y <- dat %>%
   pull(outcome)
 
+idx <- complete.cases(X)
 
+preds <- Predict(X[idx,], fit, num.cores=nCores, aggregate.output=FALSE)
+p.out <- rowSums(preds=="Out")/ncol(preds)
+p.single <- rowSums(preds=="Single")/ncol(preds)
+p.double <- rowSums(preds=="Double")/ncol(preds)
+p.triple <- rowSums(preds=="Triple")/ncol(preds)
+p.hr <- rowSums(preds=="Home run")/ncol(preds)
+p <- cbind(p.out, p.single, p.double, p.triple, p.hr)
 
-randImpute <- function(X) {
-  X.cc <- X[complete.cases(X),]
-  for (col in colnames(X)) {
-    n <- sum(is.na(X[[col]]))
-    imp <- sample(X.cc[[col]], size=n)
-    X[[col]][is.na(X[[col]])] <- imp
-  }
-  return(X)
-}
+predictions[idx,] <- p
 
-rfxwOBA.marginal <- function(X, Y, const, nSim) {
-  res <- matrix(rep(NA, nrow(X)*nSim), ncol=nSim)
-  wobacon <- c(0, 0.9, 1.25, 1.6, 2)
-  nCores <- detectCores() - 1
-  idxBB <- Y=="Walk" | Y=="Hit by pitch"
-  idxK <- Y=="Strikeout" | Y=="Sac bunt"
-  res[idxBB,] <- 0.7
-  res[idxK,] <- 0
-  idxBIP <- !idxBB&!idxK
-  X.bip <- randImpute(X[idxBIP,])
-  for (i in 1:nSim) {
-    print(i)
-    idx <- sample(nrow(X.bip))
-    X.new <- X.bip[idx,]
-    for (val in const) {
-      X.new[[val]] <- X.bip[[val]]
-    }
-    preds <- Predict(X.new, fit, num.cores=nCores, aggregate.output=FALSE)
-    p.out <- rowSums(preds=="Out")/ncol(preds)
-    p.single <- rowSums(preds=="Single")/ncol(preds)
-    p.double <- rowSums(preds=="Double")/ncol(preds)
-    p.triple <- rowSums(preds=="Triple")/ncol(preds)
-    p.hr <- rowSums(preds=="Home run")/ncol(preds)
-    p <- cbind(p.out, p.single, p.double, p.triple, p.hr)
-    res[idxBIP,i] <- t(wobacon%*%t(p))
-  }
-  return(res)
-}
-
-set.seed(12345)
-
-const <- c("launch_angle", "launch_speed", "sprint_speed", "spray_angle", "batterRighty")
-nSim <- 100
-
-rfxwOBA <- rfxwOBA.marginal(X, Y, const, nSim)
-saveRDS(rfxwOBA, file="../data/projection/rfxwOBA.rds")
-
-
+saveRDS(predictions, "../data/projection/predictions.rds")
 

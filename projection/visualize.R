@@ -94,3 +94,55 @@ rolling.rfxwOBA <- function(dat, player.name, id.dat, type) {
     labs(title=paste0(player.name, " rolling wOBA vs. estimates: 2017-2019"),
          x="Date", y="Value", color="Statistic")
 }
+
+woba.dat <- dat %>%
+  select(woba_value, woba_denom, xwOBA, rfxwOBA, game_date, batter, pitcher) %>%
+  mutate(Year=year(game_date))
+woba.dat.batter <- woba.dat %>% 
+  group_by(batter, Year) %>%
+  summarize(PA=n(), 
+            wOBA=sum(woba_value)/sum(woba_denom),
+            xwOBA=sum(xwOBA)/sum(woba_denom),
+            rfxwOBA=sum(rfxwOBA)/sum(woba_denom)) %>%
+  gather(key="measure", value="value", -(batter:Year)) %>%
+  unite(temp, measure, Year) %>%
+  spread(temp, value)
+woba.dat.pitcher <- woba.dat %>% 
+  group_by(pitcher, Year) %>%
+  summarize(PA=n(), 
+            wOBA=sum(woba_value)/sum(woba_denom),
+            xwOBA=sum(xwOBA)/sum(woba_denom),
+            rfxwOBA=sum(rfxwOBA)/sum(woba_denom)) %>%
+  gather(key="measure", value="value", -(pitcher:Year)) %>%
+  unite(temp, measure, Year) %>%
+  spread(temp, value)
+
+proj.17.18.batter <- woba.dat.batter %>% 
+  filter(PA_2017 >= 250 & PA_2018 >= 250) %>% 
+  group_by() %>%
+  summarize(rfxwOBA2wOBA=cor(rfxwOBA_2017, wOBA_2018),
+            xwOBA2wOBA=cor(xwOBA_2017, wOBA_2018),
+            wOBA2wOBA=cor(wOBA_2017, wOBA_2018))
+
+proj.18.19.batter <- woba.dat.batter %>% 
+  filter(PA_2018 >= 250 & PA_2019 >= 250) %>% 
+  group_by() %>%
+  summarize(rfxwOBA2wOBA=cor(rfxwOBA_2018, wOBA_2019),
+            xwOBA2wOBA=cor(xwOBA_2018, wOBA_2019),
+            wOBA2wOBA=cor(wOBA_2018, wOBA_2019))
+
+rel.17.18.batter <- woba.dat.batter %>% 
+  filter(PA_2017 >= 250 & PA_2018 >= 250) %>% 
+  group_by() %>%
+  summarize(rfxwOBA2wOBA=cor(rfxwOBA_2017, rfxwOBA_2018),
+            xwOBA2wOBA=cor(xwOBA_2017, xwOBA_2018),
+            wOBA2wOBA=cor(wOBA_2017, wOBA_2018))
+
+rel.18.19.batter <- woba.dat.batter %>% 
+  filter(PA_2018 >= 250 & PA_2019 >= 250) %>% 
+  group_by() %>%
+  summarize(rfxwOBA2wOBA=cor(rfxwOBA_2018, rfxwOBA_2019),
+            xwOBA2wOBA=cor(xwOBA_2018, xwOBA_2019),
+            wOBA2wOBA=cor(wOBA_2018, wOBA_2019))
+
+
