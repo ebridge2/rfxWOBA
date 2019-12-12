@@ -1,4 +1,3 @@
-  
 ---
 title: "baseball"
 output: html_document
@@ -36,6 +35,35 @@ The rules governing play beyond this are complex, but they are not crucial to un
 
 ### Baseball statistics and wOBA
 
+Baseball statistics have been recorded and studied for well over one hundred years. Possibly due to the fact that individual actions are relatively easily separable in baseball (i.e., teammates have less of an effect on each other's individual outcomes than in other sports), baseball has also perhaps been the sport most responsible for the origination and explosion of advanced sports analytics, whereby analysts identify measured player accomplishments that are most likely to translate to runs and wins and apply sophisticated statistical methods to make predictions and inferences about such quantities. A pioneer of this work in the late 20th century was Bill James, honored as one of Time Magazine's 100 most influential people in the world for 2006. Advanced baseball statistics, often known as "sabermetrics," entered into popular culture with Michael Lewis's 2003 bestseller *Moneyball: The Art of Winning an Unfair Game* about the Oakland Athletics' adoption of sabermetric principles, later adapted into the Oscar-nominated 2011 film *Moneyball*.
 
+In this project, we are going to focus on the sabermetric statistic *wOBA*, which stands for "weighted on-base percentage." For a given sequences of a batter's plate appearances, is calculated as follows:
+
+\[
+wOBA = \frac{0.7*(W+HBP)+0.9*S+1.25*D+1.6*T+2*HR}{PA-SacB}
+\]
+
+where W is the number of walks, HBP is the number of times hit-by-pitch (same outcome as walk), S is the number of singles, D is the number of doubles, T is the number of triples, HR is the number of home runs, PA is the number of plate appearances, and SacB is the number of sacrifice bunts. The weights in the numerator are calculated so as to represent the number of additional runs scored that can be expected by a given batting outcome, relative to that batter instead getting out. The denominator normalizes the statistic to account for the fact that some batters have more opportunities to hit (plate appearances) than others. (Sacrifice bunts are a technicality that can be ignored for the purposes of understanding.)
+
+Therefore, $wOBA$ may be seen as a kind of "gold-standard" batting statistic; a player's $wOBA$ represents how many runs he tends to contribute each time he goes to bat.
 
 ### Project aim
+
+Although $wOBA$ is a very useful statistic because it attempts to tie batter outcomes directly to run production, it is still "outcome-oriented" in that it is purely a function of the batter's game-recorded outcomes. Outcome-oriented statistics are convenient and justifiable in the longterm, but they are not necessarily optimal for player evaluation and the prediction of future results.
+
+As an analogy, imagine a novice poker player facing off against a professional. Since the game of poker has elements of both luck and skill, it is possible for the novice to beat the professional in a given match. An outcome-oriented analysis would conclude that the novice *played better* than the professional. But an informed observer would likely be able to recognize that the professional's decisions throughout the game were actually superior, and he just happened to be unlucky.
+
+In much the same way, a batter's recorded outcomes (single, double, etc.) are the result both of his own actions (hitting the ball and running), and factors outside of his control (defensive quality and stadium factors). Therefore, if we are able to identify the value of *batter-based* actions, we might arrive at a *wOBA*-type measure that is a more accurate indicator of batter quality.
+
+This concept is not new; the analytics firm Statcast calculates a statistic called *xwOBA*, short for "expected wOBA," which attempts to determine the *wOBA* that could be expected from the batter's contact with the ball, as measured by speed and launch angle. However, to our knowledge the algorithm used to calculate the statistic is not publicly available. We will calculate our own version of expected wOBA which uses many more variables than what Statcast claims to. We believe that one of these variables, sprint speed, should add value to the model because it is a batter-level variable that is an important factor in whether a given batted ball is converted into a single, double, or triple. We also include other variables *outside* the batter's control and attempt to marginalize over their league-distribution. It is debatable whether such a procedure should produce better predictions of *wOBA* than simply omitting those variables from the beginning, but including them allows us to answer independent questions of interest with regard to what external factors affect batting outcomes.
+
+
+### Data 
+
+## Exploratory analysis
+
+## Model
+
+## Results
+
+## Conclusion
