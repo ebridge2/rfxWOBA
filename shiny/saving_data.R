@@ -1,19 +1,48 @@
+
+library(shiny)
 library(tidyverse)
 library(readr)
-library(gridExtra)
-library(rerf)
-library(data.table)
-library(mltools)
-library(kableExtra)
-library(parallel)
+library(lubridate)
+library(readr)
+library(tidyverse)
+library(lubridate)
 
+#load the clean data
+dat1 <- read_csv("../../data/cleaned/model_data.csv")
 
-fit <- readRDS("../data/rf/fit_model.rds")
-dat <- read_csv("../data/cleaned/model_data.csv")
+# load the raw data
+dat2 <- read_csv("../../data/raw/baseball_data.csv")
 
-predictions <- matrix(rep(NA, nrow(dat)*5), ncol=5)
+# join the batter id, pitcher id, game_date, and woba values from raw data
 
-nCores <- detectCores() - 1
+dat <- data.frame(outcome=dat$outcome) %>%
+  mutate(batter=dat2$batter,
+         pitcher=dat2$pitcher,
+         xwOBA=as.numeric(dat2$estimated_woba_using_speedangle),
+         game_date=as.Date(dat2$game_date),
+         woba_value=get.wOBA.value(outcome),
+         woba_denom=get.wOBA.denom(outcome),
+         des=dat2$des) 
+
+dat[is.na(dat$xwOBA),]$xwOBA <- dat[is.na(dat$xwOBA),]$woba_value
+
+rm(dat1)
+rm(dat2)
+
+# player id data
+
+id.dat <- read_csv("../../data/raw/player_id.csv") %>%
+  select(mlb_id, mlb_name)
+
+write_rds(dat, "../../data/shiny/player_dat.rds")
+
+write_rds(id.dat, "../../data/shiny/player_id.rds")
+
+dat <- read_csv("../../data/cleaned/model_data.csv")
+
+descriptions <- read_csv("../../data/raw/baseball_data.csv") %>%
+  select(des)
+
 
 # select numeric features
 X.num <- dat %>%
@@ -41,21 +70,6 @@ X.cat <- dat %>%
 # paste em together with categoricals all after numerics
 X <- cbind(X.num, X.cat)
 
-# obtain the outcome variable
-Y <- dat %>%
-  pull(outcome)
+write_rds(X, "../../data/shiny/model_dat.rds")
 
-idx <- complete.cases(X)
-
-preds <- Predict(X[idx,], fit, num.cores=nCores, aggregate.output=FALSE)
-p.out <- rowSums(preds=="Out")/ncol(preds)
-p.single <- rowSums(preds=="Single")/ncol(preds)
-p.double <- rowSums(preds=="Double")/ncol(preds)
-p.triple <- rowSums(preds=="Triple")/ncol(preds)
-p.hr <- rowSums(preds=="Home run")/ncol(preds)
-p <- cbind(p.out, p.single, p.double, p.triple, p.hr)
-
-predictions[idx,] <- p
-
-saveRDS(predictions, "../data/projection/predictions.rds")
-
+write_rds(descriptions, "../../data/shiny/descriptions.rds")
