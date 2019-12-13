@@ -65,18 +65,18 @@ This concept is not new; the analytics firm at Statcast calculates a statistic c
 $554,149$ samples of baseball event data are collected from [Baseball Savant](https://baseballsavant.mlb.com/statcast_search). For this investigation, we are interested in event-related batted ball-outcomes; that is, those at-bats that end with either i) an out, ii) a single, iii) a double, iv) a triple, or v) a home run. $377,050$ ($68.6\%$) of the samples produced a batted ball event. Predictors of interest are broken into two categories: those that the batter has control of, and those the batter does not have control of. $100\%$ of the dataset contains valid outcome variables, whereas $4.6\%$ of the dataset contains incomplete predictor rows. The dataset consists of of $239,521$ ($66.5\%$) of outs, $75,935$ ($21.1\%$) of singles, $24,345$ ($6.7\%$) of doubles, $2356$ ($.6\%$) of triples, and $17,624$ ($4.9\%$) of home runs. The predictors of interest are organized as follows:
 
 1. Batter-Controlled Predictors
-    + Launch Speed: The velocity the ball is hit.
-    + Launch Angle: The angle of the ball's trajectory, relative the ground.
-    + Spray Angle: The angle of of the ball's trajectory, relative the field. This feature was approximated using a coordinate system of where the ball was fielded. This was accomplished using a formula from a contributor at [The Hardball Times](https://tht.fangraphs.com/research-notebook-new-format-for-statcast-data-export-at-baseball-savant/).
-    + Strike Zone, Top: The top of the batter's strike zone.
-    + Strike Zone, Bottom: The bottom of the batter's strike zone.
-    + Ball/Strike Count: The current number of balls/strikes in the count.
+    + Launch Speed: The speed of the ball immediately after being hit.
+    + Launch Angle: The angle of the ball's trajectory, relative the ground (altitude angle).
+    + Spray Angle: The angle of of the ball's trajectory, relative the batter's forward perspective towards the pitcher (azimuth angle). This feature was approximated using a coordinate system of where the ball was fielded. This was accomplished using a formula from a contributor at [The Hardball Times](https://tht.fangraphs.com/research-notebook-new-format-for-statcast-data-export-at-baseball-savant/).
+    + Strike Zone, Top: The height of the top of the batter's strike zone. (According to MLB rules, this is halfway between the batter's shoulders and the top of his pants.)
+    + Strike Zone, Bottom: The height of the bottom of the batter's strike zone. (According to MLB rules, this is at the batter's knees.)
+    + Ball/Strike Count: The current number of balls/strikes when the pitch was thrown.
     + Batting Handedness: The side of the plate from which the batter hits.
     + Sprint Speed: The top sprint speed of the batter measured from that season. This data was also acquired from [Baseball Savant](https://baseballsavant.mlb.com/sprint_speed_leaderboard) in a separate data set.
 2. Non-Batter-Controlled Predictors
-    + Release Position of Pitch (x/y/z): The position the ball is release from.
+    + Release Position of Pitch (x/y/z): The position the ball is release from. (The *z*-axis is perpendicular to the ground. The *y*-axis is the forward perspective of the batter towards the pitcher. The *x*-axis is horizontal, running parallel to the front edge of home plate, or equivalently the line connecting first base and third base.)
     + Velocity of Pitch (x/y/z/cumulative): The velocity of the pitch.
-    + Zone: The categorical zone in which the ball crosses the plate.
+    + Zone: The categorical zone in which the ball crosses the plate, split into 14 sectors in the *xz* plane.
     + Pitcher Throwing Handedness: The hand from which the pitcher throws.
     + Movement of Pitch (x, z): The relative drop of the pitch in the x and z dimensions.
     + Plate Location (x, z): The location at which the ball crosses the plate.
