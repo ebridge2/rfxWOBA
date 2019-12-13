@@ -34,7 +34,13 @@ out <- c("Out", "Single", "Double", "Triple", "Home run")
 # Define server logic required to draw a histogram
 shinyServer(function(input, output, session) {
   
+    
+  
   output$ballPlot <- renderPlot({
+    
+    input$plot
+    
+    isolate(
     
     if (input$realPlay) {
       idx <- sample(idx.cc, size=1)
@@ -70,14 +76,8 @@ shinyServer(function(input, output, session) {
         labs(title="",
              x="Spray Angle",
              y="Launch Speed")
-      preds <- Predict(dat, fit, num.cores=1L, aggregate.output=FALSE)
-      p.out <- rowSums(preds=="Out")/ncol(preds)
-      p.single <- rowSums(preds=="Single")/ncol(preds)
-      p.double <- rowSums(preds=="Double")/ncol(preds)
-      p.triple <- rowSums(preds=="Triple")/ncol(preds)
-      p.hr <- rowSums(preds=="Home run")/ncol(preds)
-      p <- c(p.out, p.single, p.double, p.triple, p.hr)
-      tbl1 <- data.frame(Outcome=out, Probability=p) %>%
+      p <- Predict(dat, fit, num.cores=1L, output.scores = TRUE)
+      tbl1 <- data.frame(Outcome=out, Probability=t(p)) %>%
         tableGrob()
       tbl2 <- data.frame(Prediction=out[which.max(p)]) %>%
         tableGrob()
@@ -119,14 +119,8 @@ shinyServer(function(input, output, session) {
          coord_polar(theta="x") +
          labs(x="Spray Angle",
               y="Launch Speed")
-       preds <- Predict(dat, fit, num.cores=1L, aggregate.output=FALSE)
-       p.out <- rowSums(preds=="Out")/ncol(preds)
-       p.single <- rowSums(preds=="Single")/ncol(preds)
-       p.double <- rowSums(preds=="Double")/ncol(preds)
-       p.triple <- rowSums(preds=="Triple")/ncol(preds)
-       p.hr <- rowSums(preds=="Home run")/ncol(preds)
-       p <- c(p.out, p.single, p.double, p.triple, p.hr)
-       tbl1 <- data.frame(Outcome=out, Probability=p) %>%
+       p <- Predict(dat, fit, num.cores=1L, output.scores = TRUE)
+       tbl1 <- data.frame(Outcome=out, Probability=t(p)) %>%
          tableGrob()
        tbl2 <- data.frame(Prediction=out[which.max(p)]) %>%
          tableGrob()
@@ -136,6 +130,8 @@ shinyServer(function(input, output, session) {
          paste("")
        })
     }
+    
+    )
     
   })
   

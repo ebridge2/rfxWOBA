@@ -28,16 +28,16 @@ get.wOBA.value <- function(Y) {
 
 # join the batter id, pitcher id, game_date, and woba values from raw data
 
-dat <- data.frame(outcome=dat$outcome) %>%
+dat <- data.frame(outcome=dat1$outcome) %>%
   mutate(batter=dat2$batter,
          pitcher=dat2$pitcher,
-         xwOBA=as.numeric(dat2$estimated_woba_using_speedangle),
+         bsxwOBA=as.numeric(dat2$estimated_woba_using_speedangle),
          game_date=as.Date(dat2$game_date),
          woba_value=get.wOBA.value(outcome),
          woba_denom=get.wOBA.denom(outcome),
          des=dat2$des) 
 
-dat[is.na(dat$xwOBA),]$xwOBA <- dat[is.na(dat$xwOBA),]$woba_value
+dat[is.na(dat$bsxwOBA),]$bsxwOBA <- dat[is.na(dat$bsxwOBA),]$woba_value
   
 rm(dat1)
 rm(dat2)
@@ -50,7 +50,7 @@ dat$rfxwOBA <- rowMeans(rfx)
 # player id data
 
 id.dat <- read_csv("../data/raw/player_id.csv") %>%
-  select(mlb_id, mlb_name)
+  dplyr::select(mlb_id, mlb_name)
 
 # function to generate distribtion of rfxwOBA for a given player in a given year
 
@@ -97,44 +97,40 @@ rolling.rfxwOBA <- function(dat, player.name, id.dat, type) {
 }
 
 woba.dat <- dat %>%
-  select(woba_value, woba_denom, xwOBA, rfxwOBA, game_date, batter, pitcher) %>%
+  dplyr::select(woba_value, woba_denom, bsxwOBA, rfxwOBA, game_date, batter, pitcher) %>%
   mutate(Year=year(game_date))
+
+
 woba.dat.batter <- woba.dat %>% 
   group_by(batter, Year) %>%
   summarize(PA=n(), 
             wOBA=sum(woba_value)/sum(woba_denom),
-            xwOBA=sum(xwOBA)/sum(woba_denom),
+            bsxwOBA=sum(bsxwOBA)/sum(woba_denom),
             rfxwOBA=sum(rfxwOBA)/sum(woba_denom)) %>%
   gather(key="measure", value="value", -(batter:Year)) %>%
   unite(temp, measure, Year) %>%
   spread(temp, value)
 
-proj.17.18.batter <- woba.dat.batter %>% 
-  filter(PA_2017 >= 250 & PA_2018 >= 250) %>% 
-  group_by() %>%
-  summarize(rfxwOBA2wOBA=cor(rfxwOBA_2017, wOBA_2018),
-            xwOBA2wOBA=cor(xwOBA_2017, wOBA_2018),
-            wOBA2wOBA=cor(wOBA_2017, wOBA_2018))
+attach(woba.dat.batter)
 
-proj.18.19.batter <- woba.dat.batter %>% 
-  filter(PA_2018 >= 250 & PA_2019 >= 250) %>% 
-  group_by() %>%
-  summarize(rfxwOBA2wOBA=cor(rfxwOBA_2018, wOBA_2019),
-            xwOBA2wOBA=cor(xwOBA_2018, wOBA_2019),
-            wOBA2wOBA=cor(wOBA_2018, wOBA_2019))
+cor.dat <- data.frame(
+  batter=rep(batter, 2),
+  PA=c(woba.dat.batter$PA_2017, woba.dat.batter$PA_2018),
+  PA.next=c(PA_2018, PA_2019),
+  wOBA=c(wOBA_2017, wOBA_2018),
+  wOBA.next=c(wOBA_2018, wOBA_2019),
+  rfxwOBA=c(rfxwOBA_2017, rfxwOBA_2018),
+  rfxwOBA.next=c(rfxwOBA_2018, rfxwOBA_2019),
+  bsxwOBA=c(bsxwOBA_2017, bsxwOBA_2018),
+  bsxwOBA.next=c(bsxwOBA_2018, bsxwOBA_2019)
+)
 
-rel.17.18.batter <- woba.dat.batter %>% 
-  filter(PA_2017 >= 250 & PA_2018 >= 250) %>% 
-  group_by() %>%
-  summarize(rfxwOBA2wOBA=cor(rfxwOBA_2017, rfxwOBA_2018),
-            xwOBA2wOBA=cor(xwOBA_2017, xwOBA_2018),
-            wOBA2wOBA=cor(wOBA_2017, wOBA_2018))
+detach(woba.dat.batter)
 
-rel.18.19.batter <- woba.dat.batter %>% 
-  filter(PA_2018 >= 250 & PA_2019 >= 250) %>% 
-  group_by() %>%
-  summarize(rfxwOBA2wOBA=cor(rfxwOBA_2018, rfxwOBA_2019),
-            xwOBA2wOBA=cor(xwOBA_2018, xwOBA_2019),
-            wOBA2wOBA=cor(wOBA_2018, wOBA_2019))
-
-
+cors <- cor.dat %>% 
+  filter(PA >= 100 & PA.next >= 100) %>%
+  summarise(wOBA2wOBA.next=cor(wOBA, wOBA.next),
+            rfx2wOBA.next=cor(rfxwOBA, wOBA.next),
+            bsx2wOBA.next=cor(bsxwOBA, wOBA.next),
+            rfx2rfx.next=cor(rfxwOBA, rfxwOBA.next),
+            bsx2bsx.next=cor(bsxwOBA, bsxwOBA.next))

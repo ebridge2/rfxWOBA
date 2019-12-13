@@ -212,24 +212,25 @@ wOBA = \frac{0.7\cdot(W+HBP)+0.9\cdot S+1.25\cdot D+1.6 \cdot T+2 \cdot HR}{PA-S
 <div id="project-aim" class="section level3">
 <h3>Project aim</h3>
 <p>Although <span class="math inline">\(wOBA\)</span> is a very useful statistic because it attempts to tie batter outcomes directly to run production, it is still “outcome-oriented” in that it is purely a function of the batter’s game-recorded outcomes. Outcome-oriented statistics are convenient and justifiable in the longterm, but they are not necessarily optimal for player evaluation and the prediction of future results.</p>
-<p>As an analogy, imagine a novice poker player facing off against a professional. Since the game of poker has elements of both luck and skill, it is possible for the novice to beat the professional in a given match. An outcome-oriented analysis would conclude that the novice <em>played better</em> than the professional. But an informed observer would likely be able to recognize that the professional’s decisions throughout the game were actually superior, and he just happened to be unlucky.</p>
-<p>In much the same way, a batter’s recorded outcomes (single, double, etc.) are the result both of his own actions (hitting the ball and running), and factors outside of his control (defensive quality and stadium factors). Therefore, if we are able to identify the value of <em>batter-based</em> actions, we might arrive at a <em>wOBA</em>-type measure that is a more accurate indicator of batter quality.</p>
-<p>This concept is not new; the analytics firm Statcast calculates a statistic called <a href="http://m.mlb.com/glossary/statcast/expected-woba"><em>xwOBA</em></a>, short for “expected wOBA,” which attempts to determine the <em>wOBA</em> that could be expected from the batter’s contact with the ball, as measured by launch speed, or the velocity at which the ball leaves the bat, and launch angle, or the vertical angle at which the ball leaves the bat. However, to our knowledge the algorithm used to calculate the statistic is not publicly available. We will calculate our own version of expected wOBA which uses many more variables than what Statcast claims to. We believe that one of these variables, sprint speed, should add value to the model because it is a batter-level variable that is an important factor in whether a given batted ball is converted into a single, double, or triple. Another factor that we believe will be important is spray angle, which is an engineered feature that approximates the horizontal angle describing the direction in the field that the ball was hit. We also include other variables <em>outside</em> the batter’s control and attempt to marginalize over their league-distribution. It is debatable whether such a procedure should produce better predictions of <em>wOBA</em> than simply omitting those variables from the beginning, but including them allows us to answer independent questions of interest with regard to what external factors affect batting outcomes.</p>
+<p>As an analogy, imagine a novice poker player facing off against a professional. Since the game of poker has elements of both luck and skill, it is possible for the novice to beat the professional in a given match. An outcome-oriented analysis would conclude that the novice <em>played better</em> than the professional. But an informed observer would likely be able to recognize that the professional’s decisions throughout the game were actually superior, and he just happened to be unlucky. In much the same way, a batter’s recorded outcomes (single, double, etc.) are the result both of his own actions (hitting the ball and running), and factors outside of his control (defensive quality and stadium factors).</p>
+<p>In 2015, a new technology called <a href="https://en.wikipedia.org/wiki/Statcast">Statcast</a> was introduced to Major League Baseball stadiums. The tool uses high-speed cameras to take measurements of ball and player movements during a game. Statcast produces a robust set of data about each baseball play and is a very exciting opportunity for baseball analytics.</p>
+<p>Using Statcast data, we may be able to identify the value of <em>batter-based</em> actions, we might arrive at an expectation of <em>wOBA</em> that is a more accurate indicator of batter quality than <em>wOBA</em> itself, which only considers the outcomes of each play.</p>
+<p>This concept is not new; the analytics firm at Statcast calculates a statistic called <a href="http://m.mlb.com/glossary/statcast/expected-woba"><em>xwOBA</em></a>, short for “expected wOBA,” which attempts to determine the <em>wOBA</em> that could be expected from the batter’s contact with the ball, as measured by launch speed, or the velocity at which the ball leaves the bat, and launch angle, or the vertical angle at which the ball leaves the bat. However, to our knowledge the algorithm used to calculate the statistic is not publicly available. We will calculate our own version of expected wOBA which uses many more variables than what Statcast claims to. We believe that one of these variables, sprint speed, should add value to the model because it is a batter-level variable that is an important factor in whether a given batted ball is converted into a single, double, or triple. Another factor that we believe will be important is spray angle, which is an engineered feature that approximates the horizontal angle describing the direction in the field that the ball was hit. We also include other variables <em>outside</em> the batter’s control and attempt to marginalize over their league-distribution. It is debatable whether such a procedure should produce better predictions of <em>wOBA</em> than simply omitting those variables from the beginning, but including them allows us to answer independent questions of interest with regard to what external factors affect batting outcomes.</p>
 </div>
 <div id="data" class="section level3">
 <h3>Data</h3>
-<p><span class="math inline">\(377,050\)</span> samples of baseball batted-event data are collected from TODO. For this investigation, we are interested in event-related batted ball-outcomes; that is, those at-bats that end with either i) an out, ii) a single, iii) a double, iv) a triple, or v) a home run. Predictors of interest are broken into two categories: those that the batter has control of, and those the batter does not have control of. <span class="math inline">\(100\%\)</span> of the dataset contains valid outcome variables, whereas <span class="math inline">\(4.6\%\)</span> of the dataset contains incomplete predictor rows. The dataset consists of of <span class="math inline">\(239,521\)</span> (<span class="math inline">\(66.5\%\)</span>) of outs, <span class="math inline">\(75,935\)</span> (<span class="math inline">\(21.1\%\)</span>) of singles, <span class="math inline">\(24,345\)</span> (<span class="math inline">\(6.7\%\)</span>) of doubles, <span class="math inline">\(2356\)</span> (<span class="math inline">\(.6\%\)</span>) of triples, and <span class="math inline">\(17,624\)</span> (<span class="math inline">\(4.9\%\)</span>) of home runs. The predictors of interest are organized as follows:</p>
+<p><span class="math inline">\(554,149\)</span> samples of baseball event data are collected from <a href="https://baseballsavant.mlb.com/statcast_search">Baseball Savant</a>. For this investigation, we are interested in event-related batted ball-outcomes; that is, those at-bats that end with either i) an out, ii) a single, iii) a double, iv) a triple, or v) a home run. <span class="math inline">\(377,050\)</span> (<span class="math inline">\(68.6\%\)</span>) of the samples produced a batted ball event. Predictors of interest are broken into two categories: those that the batter has control of, and those the batter does not have control of. <span class="math inline">\(100\%\)</span> of the dataset contains valid outcome variables, whereas <span class="math inline">\(4.6\%\)</span> of the dataset contains incomplete predictor rows. The dataset consists of of <span class="math inline">\(239,521\)</span> (<span class="math inline">\(66.5\%\)</span>) of outs, <span class="math inline">\(75,935\)</span> (<span class="math inline">\(21.1\%\)</span>) of singles, <span class="math inline">\(24,345\)</span> (<span class="math inline">\(6.7\%\)</span>) of doubles, <span class="math inline">\(2356\)</span> (<span class="math inline">\(.6\%\)</span>) of triples, and <span class="math inline">\(17,624\)</span> (<span class="math inline">\(4.9\%\)</span>) of home runs. The predictors of interest are organized as follows:</p>
 <ol style="list-style-type: decimal">
 <li>Batter-Controlled Predictors
 <ul>
 <li>Launch Speed: The velocity the ball is hit.</li>
 <li>Launch Angle: The angle of the ball’s trajectory, relative the ground.</li>
-<li>Spray Angle: The angle of of the ball’s trajectory, relative the field. TODO Joe add citation</li>
-<li>Strike Zone, Top: Whether the ball is in the top of the batter’s strike zone.</li>
-<li>Strike Zone, Bottom: Whether the ball is in the bottom of the batter’s strike zone.</li>
+<li>Spray Angle: The angle of of the ball’s trajectory, relative the field. This feature was approximated using a coordinate system of where the ball was fielded. This was accomplished using a formula from a contributor at <a href="https://tht.fangraphs.com/research-notebook-new-format-for-statcast-data-export-at-baseball-savant/">The Hardball Times</a>.</li>
+<li>Strike Zone, Top: The top of the batter’s strike zone.</li>
+<li>Strike Zone, Bottom: The bottom of the batter’s strike zone.</li>
 <li>Ball/Strike Count: The current number of balls/strikes in the count.</li>
 <li>Batting Handedness: The side of the plate from which the batter hits.</li>
-<li>Sprint Speed: The top sprint speed of the batter.</li>
+<li>Sprint Speed: The top sprint speed of the batter measured from that season. This data was also acquired from <a href="https://baseballsavant.mlb.com/sprint_speed_leaderboard">Baseball Savant</a> in a separate data set.</li>
 </ul></li>
 <li>Non-Batter-Controlled Predictors
 <ul>
@@ -237,28 +238,33 @@ wOBA = \frac{0.7\cdot(W+HBP)+0.9\cdot S+1.25\cdot D+1.6 \cdot T+2 \cdot HR}{PA-S
 <li>Velocity of Pitch (x/y/z/cumulative): The velocity of the pitch.</li>
 <li>Zone: The categorical zone in which the ball crosses the plate.</li>
 <li>Pitcher Throwing Handedness: The hand from which the pitcher throws.</li>
-<li>Movement of Pitch (x,z): The relative drop of the pitch in the x and z dimensions.</li>
+<li>Movement of Pitch (x, z): The relative drop of the pitch in the x and z dimensions.</li>
 <li>Plate Location (x, z): The location at which the ball crosses the plate.</li>
 <li>Runner Positions: Whether there are runners on <span class="math inline">\(1^{st}\)</span>, <span class="math inline">\(2^{nd}\)</span>, or <span class="math inline">\(3^{rd}\)</span> bases at the time of the at-bat.</li>
-<li>Acceleration of Pitch (x/y/z/cumulative): THe acceleration of the pitch.</li>
+<li>Acceleration of Pitch (x/y/z): The acceleration of the pitch.</li>
 <li>Effective Speed: The effective speed of the pitch, based on where the pitcher releases the ball.</li>
 <li>Release Spin Rate: The spin rate of the pitch.</li>
 <li>Release Extension: The extension point at which the pitch is released.</li>
-<li>Pitch Number: Total number of pitches thrown.</li>
+<li>Pitch Number: Total number of pitches thrown in current plate appearance.</li>
 <li>Pitch Name: The label of the pitch type (fastball, curveball, changeup, etc.).</li>
-<li>Fielder Defensive Statistics: The defensive rating of each of the <span class="math inline">\(9\)</span> fielders. TODO what statistic is used?</li>
+<li>Fielder Defensive Statistics: The defensive rating of each of the <span class="math inline">\(9\)</span> fielders. The statistic used for these variables is <a href="https://library.fangraphs.com/defense/drs/">Defensive Runs Saved (DRS)</a> which measures how many runs above or below average a fielder contributes to their team. In this model, the DRS for the player at that position in that season was normalized to <span class="math inline">\(1,000\)</span> innings played. The DRS measurements were obtained from <a href="https://www.fangraphs.com/leaders.aspx?pos=all&amp;stats=fld&amp;lg=all&amp;qual=y&amp;type=1&amp;season=2019&amp;month=0&amp;season1=2019&amp;ind=0&amp;team=0&amp;rost=0&amp;age=0&amp;filter=&amp;players=0&amp;startdate=&amp;enddate=">fangraphs.com</a>.</li>
 <li>Score of Batter’s Team: Score of the team the batter is on.</li>
 <li>Score of Pitcher’s Team: Score of the team the pitcher is on.</li>
-<li>Infield Fielding Alignment: The label of the infield fielding strategy employed (traditional, overshift, extra infielder, etc.).</li>
-<li>Outfield Fielding Alignment: The label of the outfield fielding strategy employed (traditional, overshift, extra outfielder, etc.).</li>
+<li>Infield Fielding Alignment: The label of the infield fielding strategy employed (standard, strategic, shift).</li>
+<li>Outfield Fielding Alignment: The label of the outfield fielding strategy employed (standard, strategic, extra outfielder).</li>
 <li>Inning Number: The number of the inning.</li>
 <li>Inning Half: Whether it is the top or bottom of the inning.</li>
 </ul></li>
 </ol>
+<p>In the data set, <span class="math inline">\(360,967\)</span> batted ball events contained complete data for all the predictors listed above. This subset of the data was used for model training.</p>
 </div>
 </div>
 <div id="exploratory-analysis" class="section level2">
 <h2>Exploratory analysis</h2>
+<div id="launch-angle-launch-speed" class="section level3">
+<h3>Launch Angle &amp; Launch Speed</h3>
+<p>Since the advent of Statcast, launch angle and launch speed have widely been considered the best indicators of batted ball quality. Batted</p>
+</div>
 </div>
 <div id="model" class="section level2">
 <h2>Model</h2>
@@ -274,10 +280,11 @@ wOBA = \frac{0.7\cdot(W+HBP)+0.9\cdot S+1.25\cdot D+1.6 \cdot T+2 \cdot HR}{PA-S
 <ul>
 <li>Assign the appropriate wOBA weights to all non-batted ball events (0 for strikeouts and 0.7 for walks and hit by pitch)</li>
 <li>Subset the data to only include the batted ball events and randomly impute any missing predictors from the complete cases</li>
-<li>Randomly shuffle the rows for every predictor except the five predictors which are direct measurements of the batter (handedness, launch speed, launch angle, spray angle and sprint speed)</li>
+<li>Randomly shuffle the rows for every predictor except for five predictors which are direct measurements of the batter <em>(batter handedness, launch speed, launch angle, spray angle and sprint speed)</em></li>
 <li>Produce predicted probabilities of each outcome for each event by running this modified data set through the random forest</li>
 <li>Linearly combine these predicted probabilities with the corresponding <em>wOBA</em> weights to produce an expected <em>wOBA</em> value for each event</li>
 </ul>
+<p>We chose to keep the five predictors listed above as constant in this process because we believe that those five variables are the best indicators of a batter’s skill in producing a positive batted ball outcome.</p>
 <p>We will repeat this procedure 1000 times to produce 1000 expected <em>wOBA</em> values for each event. We will consider this to be a sample from the distribution of expected <em>wOBA</em> values for an event given the five “batter” measurements held constant. Using these values for a given player over a season, we can produce 1000 expected <em>wOBA</em> values for that player in that season. We can visaulize and analyze the distribution of these expected <em>wOBA</em> values, as well as produce a point estimate of expected <em>wOBA</em> by taking the mean of the 1000 values. We will refer to this point estimate as <em>rfxwOBA</em> or “random forest expected wOBA”.</p>
 <p>We will produce these distributions and metrics in two ways. Once by obtaining estimates of the entire data set (2017-2019 seasons) on a model trained on the complete cases of the entire data set. We will also fit three additional random forest models, with each of them holding out one season’s data from the training set. Then we will produce the estimates for the events in a given season using the model that did not include that season’s data in the training set.</p>
 <p>In order to assess the validity of this metric for projecting a player’s future performance, we will calculate league-wide correlations of a season’s <em>rfxwOBA</em> to the following season’s <em>wOBA</em>, and comparing it to the correlation of the season’s <em>wOBA</em> to the following season’s <em>wOBA</em>. A stronger association between <em>rfxwOBA</em> and next season’s <em>wOBA</em> than <em>wOBA</em> and next season’s <em>wOBA</em> will suggest evidence that <em>rfxwOBA</em> is a better predictor of a player’s future performance than actual <em>wOBA</em>. We will also assess the reliability of <em>rfxwOBA</em> by calculating the correlation of league-wide <em>rfxwOBA</em> in a season to itself in the following season.</p>

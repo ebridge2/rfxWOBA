@@ -46,7 +46,9 @@ shinyUI(fluidPage(
                     max=40),
        checkboxInput("realPlay",
                      label="Random Real Play",
-                     value=FALSE)
+                     value=FALSE),
+       actionButton("plot",
+                    label="Predict!")
     ),
     
     # Show a plot of the generated distribution
