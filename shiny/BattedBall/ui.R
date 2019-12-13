@@ -13,7 +13,7 @@ library(shiny)
 shinyUI(fluidPage(
   
   # Application title
-  titlePanel("Mouse Allergen and Asthma Data Visualizer"),
+  titlePanel("Predict a batted ball!"),
   
   # Sidebar with a slider input for number of bins 
   sidebarLayout(
@@ -51,7 +51,8 @@ shinyUI(fluidPage(
     
     # Show a plot of the generated distribution
     mainPanel(
-       plotOutput("ballPlot")
+       plotOutput("ballPlot"),
+       textOutput("description")
     )
   )
 ))

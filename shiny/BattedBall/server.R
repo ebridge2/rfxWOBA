@@ -18,12 +18,13 @@ library(kableExtra)
 library(parallel)
 
 
-dat.full <- read_csv("../../data/cleaned/model_data.csv")
-descriptions <- read_csv("../../data/raw/baseball_data.csv") %>%
-  select(des)
+fit <- read_rds("../../data/rf/fit_model.rds")
 
+X <- read_rds("../../data/shiny/model_dat.rds")
 
-idx.cc <- which(complete.cases(dat))
+descriptions <- read_rds("../../data/shiny/descriptions.rds")
+
+idx.cc <- which(complete.cases(X))
 
 
 out <- c("Out", "Single", "Double", "Triple", "Home run")
@@ -37,12 +38,12 @@ shinyServer(function(input, output, session) {
     
     if (input$realPlay) {
       idx <- sample(idx.cc, size=1)
-      dat <- dat.full[idx,]
+      dat <- X[idx,]
       batterStand <- ifelse(dat$batterRighty, "Right", "Left")
       updateSelectInput(session, "batterStand", selected=batterStand)
       updateNumericInput(session, "launchSpeed", value=dat$launch_speed)
       updateNumericInput(session, "launchAngle", value=dat$launch_angle)
-      updateNumericInput(session, "sprayAngle", value=dat$lspray_angle)
+      updateNumericInput(session, "sprayAngle", value=dat$spray_angle)
       updateNumericInput(session, "sprintSpeed", value=dat$sprint_speed)
       plt1 <- dat %>% ggplot(aes(x=-(launch_angle+90), y=launch_speed)) +
         geom_point() +
@@ -51,14 +52,13 @@ shinyServer(function(input, output, session) {
                            breaks = c(-180, -135, -90, -45, 0),
                            labels = c(90, 45, 0, -45, -90)) +
         scale_y_continuous(limits = c(0, 125)) +
-        labs(title=descriptions$des[idx],
-             x="Launch Angle",
+        labs(x="Launch Angle",
              y="Launch Speed") 
       foul.lines <- data.frame(lf=c(315,315),
                                rf=c(45,45),
                                launch_speed=c(0,120))
-      dat <- dat %>% mutate(spray_angle2=ifelse(spray_angle<0, 360+spray_angle, spray_angle))
-      plt2 <- dat %>% ggplot(aes(x=spray_angle2, y=launch_speed)) +
+      dat.plt <- dat %>% mutate(spray_angle2=ifelse(spray_angle<0, 360+spray_angle, spray_angle))
+      plt2 <- dat.plt %>% ggplot(aes(x=spray_angle2, y=launch_speed)) +
         geom_line(data=foul.lines, aes(x=lf, y=launch_speed), color="black") +
         geom_line(data=foul.lines, aes(x=rf, y=launch_speed), color="black") +
         geom_point() + 
@@ -70,25 +70,31 @@ shinyServer(function(input, output, session) {
         labs(title="",
              x="Spray Angle",
              y="Launch Speed")
-     
-      tbl1 <- data.frame(Outcome=out,
-                         Probability=p) %>%
-        kable() %>%
-        kable_styling("striped")
+      preds <- Predict(dat, fit, num.cores=1L, aggregate.output=FALSE)
+      p.out <- rowSums(preds=="Out")/ncol(preds)
+      p.single <- rowSums(preds=="Single")/ncol(preds)
+      p.double <- rowSums(preds=="Double")/ncol(preds)
+      p.triple <- rowSums(preds=="Triple")/ncol(preds)
+      p.hr <- rowSums(preds=="Home run")/ncol(preds)
+      p <- c(p.out, p.single, p.double, p.triple, p.hr)
+      tbl1 <- data.frame(Outcome=out, Probability=p) %>%
+        tableGrob()
       tbl2 <- data.frame(Prediction=out[which.max(p)]) %>%
-        kable() %>%
-        kable_styling("striped")
-        
-      grid.arrange(plt1, plt2, ncol=2)
+        tableGrob()
+      grid.arrange(plt1, plt2, tbl1, tbl2, ncol=2)
+      output$description <- renderText({
+        paste(descriptions$des[idx])
+      })
       
       
     } else {
       
        idx <- sample(idx.cc, size=1)
-       dat <- dat.full[idx,]
-       dat <- data.frame(launch_speed=input$launchSpeed,
-                         launch_angle=input$launchAngle,
-                         spray_angle=input$sprayAngle)
+       dat <- X[idx,]
+       dat <- dat %>%
+         mutate(launch_speed=input$launchSpeed,
+                launch_angle=input$launchAngle,
+                spray_angle=input$sprayAngle)
        plt1 <- dat %>% ggplot(aes(x=-(launch_angle+90), y=launch_speed)) +
          geom_point() +
          coord_polar(theta="x") +
@@ -101,8 +107,8 @@ shinyServer(function(input, output, session) {
        foul.lines <- data.frame(lf=c(315,315),
                                 rf=c(45,45),
                                 launch_speed=c(0,120))
-       dat <- dat %>% mutate(spray_angle2=ifelse(spray_angle<0, 360+spray_angle, spray_angle))
-       plt2 <- dat %>% ggplot(aes(x=spray_angle2, y=launch_speed)) +
+       dat.plt <- dat %>% mutate(spray_angle2=ifelse(spray_angle<0, 360+spray_angle, spray_angle))
+       plt2 <- dat.plt %>% ggplot(aes(x=spray_angle2, y=launch_speed)) +
          geom_line(data=foul.lines, aes(x=lf, y=launch_speed), color="black") +
          geom_line(data=foul.lines, aes(x=rf, y=launch_speed), color="black") +
          geom_point() + 
@@ -113,16 +119,22 @@ shinyServer(function(input, output, session) {
          coord_polar(theta="x") +
          labs(x="Spray Angle",
               y="Launch Speed")
-       
-       tbl1 <- data.frame(Outcome=out,
-                          Probability=p) %>%
-         kable() %>%
-         kable_styling("striped")
+       preds <- Predict(dat, fit, num.cores=1L, aggregate.output=FALSE)
+       p.out <- rowSums(preds=="Out")/ncol(preds)
+       p.single <- rowSums(preds=="Single")/ncol(preds)
+       p.double <- rowSums(preds=="Double")/ncol(preds)
+       p.triple <- rowSums(preds=="Triple")/ncol(preds)
+       p.hr <- rowSums(preds=="Home run")/ncol(preds)
+       p <- c(p.out, p.single, p.double, p.triple, p.hr)
+       tbl1 <- data.frame(Outcome=out, Probability=p) %>%
+         tableGrob()
        tbl2 <- data.frame(Prediction=out[which.max(p)]) %>%
-         kable() %>%
-         kable_styling("striped")
+         tableGrob()
        
-       grid.arrange(plt1, plt2, ncol=2)
+       grid.arrange(plt1, plt2, tbl1, tbl2, ncol=2)
+       output$description <- renderText({
+         paste("")
+       })
     }
     
   })
