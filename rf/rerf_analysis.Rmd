@@ -1,10 +1,11 @@
 ---
-title: "Model Analysis"
+title: "Random Forest Model Analysis and Validation"
 author: "Eric Bridgeford"
-date: "December 3, 2019"
+date: "December 1, 2019"
 output: html_document
 ---
 
+# Model Fitting
 
 ## Loading Data
 
@@ -31,16 +32,21 @@ batted.dat.cc <- batted.dat[complete.cases(batted.dat),]
 ```{r data_clean, eval=FALSE}
 # select numeric features
 X.num <- batted.dat.cc %>%
+  # these are the features which are not 1 of K for K > 2
   select(-outcome, -pitch_name, -stadium, -if_fielding_alignment, -of_fielding_alignment) %>%
+  # replace features that have K=2 with numerics 0, 1
   mutate(stand=as.numeric(stand == "R"), p_throws=as.numeric(p_throws == "R"),
          inning_topbot=as.numeric(inning_topbot == "Top"), on_1b_bool=as.numeric(on_1b_bool),
          on_2b_bool=as.numeric(on_2b_bool), on_3b_bool=as.numeric(on_3b_bool)) %>%
+  # rename the features according to how we encoded the K=2 features
   rename(batterRighty=stand, pitcherRighty=p_throws, inningTopHalf=inning_topbot, RO1b=on_1b_bool,
          RO2b=on_2b_bool, RO3b=on_3b_bool)
 
-# one-hot encode categorical features
+# one-hot encode categorical features where K > 2
 X.cat <- batted.dat.cc %>%
+  # select the features which are 1 of K for K > 2
   select(pitch_name, stadium, if_fielding_alignment, of_fielding_alignment) %>%
+  # turn them into ordered factors
   mutate(pitch_name=factor(pitch_name, levels=unique(pitch_name)),
          stadium=factor(stadium, levels=unique(stadium)),
          if_fielding_alignment=factor(if_fielding_alignment, levels=unique(if_fielding_alignment)),
@@ -48,6 +54,7 @@ X.cat <- batted.dat.cc %>%
   # rename with periods so that we can grab the categorical features later since they are OHE'd with _s
   rename(if.fielding.alignment=if_fielding_alignment,
          of.fielding.alignment=of_fielding_alignment) %>%
+  # convert to data table so we can OHE
   as.data.table() %>%
   # one-hot encode the entire table
   one_hot()
@@ -56,20 +63,28 @@ X.cat <- batted.dat.cc %>%
 X <- cbind(X.num, X.cat)
 
 # identify which categorical features are where
+# shift by 1 to account for deleting the "years" column
 cat.map <- lapply(c("pitch.name", "stadium", "if.fielding.alignment",
                     "of.fielding.alignment"), function(var) {
-  as.numeric(which(sapply(colnames(X), function(x) {grepl(var, x)})))
+  # compute the columns corresponding to a single 1 of K encoding, when K > 2
+  as.numeric(which(sapply(colnames(X), function(x) {grepl(var, x)}))) - 1
 })
 
 # obtain the outcome variable
 Y <- batted.dat.cc %>%
+  # factorize
   mutate(outcome=factor(outcome, levels=c("Out", "Single", "Double", "Triple", "Home run"))) %>%
+  # extract the column-of-interest
   pull(outcome)
 ```
 
+Below, we fix a code bug in the prediction code (without this fix, the predictions will be 1:5, not "Single", "Home run", etc.).
+
 ```{r correct_bug, eval=FALSE}
-fixInNamespace("Predict", ns="rerf")
+fixInNamespace("Predict", ns="rerf")  # bottom content-ful line should be predictions <- labels[predictions]
 ```
+
+## Prepare Cross-Validation Folds for 50-Fold XV
 
 ```{r make_xvsplits, eval=FALSE}
 K <- 50  # number of folds for XV
@@ -78,6 +93,12 @@ p <- ncol(X) # number of features in the data
 d <- ceiling(sqrt(p)) # number of features to sample at each split
 saveRDS(list(X=X, Y=Y, xv.sets=xv.sets, cat.map=cat.map), file='../data/rf/rf_ins.rds')
 ```
+
+## Cross Validate with 50-fold Cross Validation
+
+Below, we have the batch script that was executed on 10 computers, each featuring between 20 and 40 cores, and between 128 and 256 GB of RAM. Line 113 should be replaced with the suitable index of the machine the script was deployed on.
+
+The results were later aggregated across machines.
 
 ```{r execute_rf, eval=FALSE}
 require(rerf)
@@ -89,8 +110,11 @@ require(parallel)
 require(data.table)
 no_cores <- detectCores() - 1  # number of cores to parallelize over
 fixInNamespace("Predict", ns="rerf")
+# how many folds should a single machine have?
 mult <- 5
+# what is the index of the particular machine?
 j <- 4
+# read in the prepared cross-validation data
 inobj <- readRDS('../data/rf/rf_ins.rds')
 
 xv.sets <- inobj$xv.sets[((j-1)*mult + 1):(j*mult)]; X <- inobj$X; Y <- inobj$Y; cat.map <- inobj$cat.map
@@ -98,9 +122,14 @@ Y.labs <- unique(Y)
 # cross validation loop
 res.xv <- lapply(1:length(xv.sets), function(i) {
   print(i)
+  # get our cross validation set
   xv.set <- xv.sets[[i]]
-  X.train <- X[xv.set$train,]; Y.train <- Y[xv.set$train]; X.test <- X[xv.set$test,]; Y.test <- Y[xv.set$test]
+  # split X, Y into the training and testing set
+  X.train <- X[xv.set$train,] %>% select(-Year); Y.train <- Y[xv.set$train]; 
+  X.test <- X[xv.set$test,] %>% select(-Year); Y.test <- Y[xv.set$test]
+  # train the forest
   forest <- RerF(X.train, Y.train, num.cores=no_cores, FUN=RandMatRF, cat.map = cat.map)
+  # get the predictions on the held-out data
   Y.hat <- rerf::Predict(X.test, forest, num.cores=1L, Xtrain = X.train)
   conf.mtx <- lapply(Y.labs, function(y.true) {
     # obtain indices corresponding to the true label
@@ -127,24 +156,172 @@ res.xv <- lapply(1:length(xv.sets), function(i) {
   dat.overall <- data.frame(fold=i, accuracy=acc.rt, chance=mean(Y.test == Y.max))
   return(list(conf.mtx=conf.mtx, dat.overall=dat.overall))
 })
+# aggregate the confusion matrix results
+conf.mtx <- lapply(res.xv, function(res) res$conf.mtx) %>%
+  bind_rows()
+# aggregate the overall results
+dat.overall <- lapply(res.xv, function(res) res$dat.overall) %>%
+  bind_rows()
+# save
+saveRDS(list(conf.mtx=conf.mtx, overall=dat.overall),
+        sprintf('../data/rf/rf_results_%d.rds', j))
+```
 
+## Compute Feature Importances on Full Dataset
+
+```{r feat_imp, eval=FALSE}
+forest <- RerF(X, Y, num.cores=no_cores, cat.map=cat.map, FUN=RandMatRF, store.impurity=TRUE)
+feature.imp.R <- FeatureImportance(forest, num.cores=1L, type="R")
+feature.imp.C <- FeatureImportance(forest, num.cores=1L, type="C")
+
+saveRDS(list(R=feature.imp.R, C=feature.imp.C), '../data/rf/feature_imp.rds')
+```
+
+## Cross Validate by Year
+
+```{r xv_year, eval=FALSE}
+require(rerf)
+require(tidyverse)
+require(lolR)
+require(ggplot2)
+require(mltools)
+require(parallel)
+require(data.table)
+
+no_cores <- detectCores() - 1  # number of cores to parallelize over
+# years <- unique(X$year)
+# cross validation loop
+# read in the prepared cross-validation data
+inobj <- readRDS('../data/rf/rf_ins.rds')
+
+X <- inobj$X; Y <- inobj$Y; cat.map <- inobj$cat.map
+years <- sort(unique(X$year))
+Y.labs <- unique(Y)
+res.xv <- lapply(1:length(years), function(i) {
+  yr <- years[i]
+  print(years[i])
+  # compute the held-out year
+  tr.idx <- which(X$year != yr); test.idx <- which(X$year == yr)
+  X.train <- X[tr.idx,] %>% select(-year); Y.train <- Y[tr.idx];
+  X.test <- X[test.idx,] %>% select(-year); Y.test <- Y[test.idx]
+  # train the forest
+  forest <- RerF(X.train, Y.train, num.cores=no_cores, FUN=RandMatRF, cat.map = cat.map)
+  # get the predictions on the held-out data
+  Y.hat <- rerf::Predict(X.test, forest, num.cores=1L, Xtrain = X.train)
+  # save the forest for shiny usage
+  saveRDS(forest, sprintf('../data/rf/trained_rf_year-%d.rds', yr))
+  conf.mtx <- lapply(Y.labs, function(y.true) {
+    # obtain indices corresponding to the true label
+    Y.test.true <- which(Y.test == y.true)
+    # obtain true counts
+    n.true <- length(Y.test.true)
+    lapply(Y.labs, function(y.pred) {
+      Y.test.pred <- which(Y.hat == y.pred)
+      # which indices with true label of y.true obtain a prediction of y.pred
+      Y.hat.true.pred <- intersect(Y.test.true, Y.test.pred)
+      # obtain count that receive a particular prediction
+      n.true.pred <- length(Y.hat.true.pred)
+      
+      # record count and percentage
+      return(data.frame(fold=yr, True=y.true, Prediction=y.pred, n=n.true, n.pred=n.true.pred,
+                        percent=n.true.pred/n.true))
+    }) %>%
+      bind_rows()
+  }) %>%
+    bind_rows()
+  acc.rt <- mean(Y.hat == Y.test)
+  # compare accuracy against the chance classifier which just guesses the maximally present class
+  # in the training data
+  labs.ct <- (Y.train %>% table())
+  Y.max <- names(labs.ct)[which(labs.ct == max(labs.ct))]
+  dat.overall <- data.frame(fold=yr, accuracy=acc.rt, chance=mean(Y.test == Y.max))
+  return(list(conf.mtx=conf.mtx, forest=forest, dat.overall=dat.overall))
+})
+# aggregate
 conf.mtx <- lapply(res.xv, function(res) res$conf.mtx) %>%
   bind_rows()
 
 dat.overall <- lapply(res.xv, function(res) res$dat.overall) %>%
   bind_rows()
 
-saveRDS(list(conf.mtx=conf.mtx, overall=dat.overall),
-        sprintf('../data/rf/rf_results_%d.rds', j))
+forests <- lapply(res.xv, function(res) res$forest)
+names(forests) <- paste("forest.", test, sep="")
+# save
+saveRDS(list(forests=conf.mtx=conf.mtx, overall=dat.overall),
+        '../data/rf/rf_results_year.rds')
+
+saveRDS(forests, '../data/rf/trained_model_by-year.rds')
 ```
 
-```{r feat_imp}
-forest <- RerF(X, Y, num.cores=no_cores, cat.map=cat.map, FUN=RandMatRF, store.impurity=TRUE)
-feature.imp.R <- FeatureImportance(forest, num.cores=no_cores, type="R")
-feature.imp.C <- FeatureImportance(forest, num.cores=no_cores, type="C")
-feature.imp.E <- FeatureImportance(forest, num.cores=no_cores, type="E")
+# Evaluation
 
-saveRDS(list(R=feature.imp.R, C=feature.imp.C, E=feature.imp.E),
-        '../data/rf/feature_imp.rds')
+```{r eval_scripts}
+folds.res <- readRDS('../data/rf/rf_results_folds.rds')
+
+years.res <- readRDS('../data/rf/rf_results_year.rds')
+# a function for generating a confusion matrix
+conf.mtx.plot <- function(dat) {
+  dat %>%
+    # group by the true labels and the predicted labels
+    group_by(True, Prediction) %>%
+    # summarize with the means per true/predicted pair
+    summarize(Proportion=mean(percent), Std=sd(percent)) %>%
+    # construct label for each cell of confusion matrix
+    mutate(Percentage=sprintf("%.1f±%.1f %%", 100*Proportion, 100*Std)) %>%
+    ggplot(aes(x=True, y=Prediction, fill=100*Proportion)) +
+      geom_tile() +
+      geom_text(aes(x = True, y = Prediction, label=Percentage)) +
+      xlab("True Class") +
+      ylab("Predicted Class") +
+      ggtitle("50-Fold Cross Validation Confusion Matrix") +
+      scale_fill_gradient(name="Percent", low="#FFFFFF", high="#BB00FF", limits=c(0, 100)) +
+      theme_bw()
+}
 ```
 
+## Confusion Matrices and Predictive Accuracy
+
+### 50-Fold Cross Validation
+
+```{r 50fold_conf}
+# construct a png and print the confusion matrix to it
+png("./figs/xv_folds.png", width=450, height=370)
+print(conf.mtx.plot(folds.res$conf.mtx))
+dev.off()
+```
+
+### Leave-One-Year-Out Validation
+
+## Feature Importances
+
+```{r feature_imp}
+feature.imp.raw <- readRDS('../data/rf/feature_imp.rds')
+# read in the X, Y so we know what feature ids correspond to
+feat.names <- colnames(readRDS('../data/rf/rf_ins.rds')$X)
+```
+
+```{r feature_imp_plt}
+png("./figs/feat_imp.png", width=450, height=370)
+print(data.frame(Feature.idx=sapply(feature.imp.raw$R$features, function(feat) feat[1]),
+                            Gini=feature.imp.raw$R$imp) %>%
+  mutate(Feature=feat.names[Feature.idx]) %>%
+  left_join(data.frame(Feature.idx=sapply(feature.imp.raw$C$features, function(feat) feat[1]),
+              Count=feature.imp.raw$C$imp), by="Feature.idx") %>%
+  mutate(Gini=Gini/max(Gini), Count=Count/max(Count)) %>%
+  top_n(10, wt=Gini) %>%
+  select(Feature, Gini, Count) %>%
+  gather(Metric, Measure, Gini:Count) %>%
+  mutate(Feature=recode_factor(Feature, `launch_angle`="Launch Angle", `launch_speed`="Launch Speed",
+                               "spray_angle"="Spray Angle", "plate_x"="Plate, Xpos", "plate_z"="Plate, Zpos",
+                               "release_spin_rate"="Release Spin Rate", "ay"="Acceleration, y",
+                               "sz_top"="Top of Strike Zone", "release_pos_z"="Release Position, Z",
+                               "sz_bot"="Bottom of Strike Zone")) %>%
+  ggplot(aes(x=Feature, y=Measure, group=Metric, fill=Metric)) +
+    geom_col(position="dodge") +
+    theme_bw() +
+    xlab("Feature Name") +
+    ylab("Normalized Metric") +
+    ggtitle("Feature Importances, Top 10") +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1)))
+dev.off()
+```
