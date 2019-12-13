@@ -60,13 +60,50 @@ This concept is not new; the analytics firm Statcast calculates a statistic call
 
 ### Data 
 
+$377,050$ samples of baseball batted-event data are collected from TODO. For this investigation, we are interested in event-related batted ball-outcomes; that is, those at-bats that end with either i) an out, ii) a single, iii) a double, iv) a triple, or v) a home run. Predictors of interest are broken into two categories: those that the batter has control of, and those the batter does not have control of. $100\%$ of the dataset contains valid outcome variables, whereas $4.6\%$ of the dataset contains incomplete predictor rows. The dataset consists of of $239,521$ ($66.5\%$) of outs, $75,935$ ($21.1\%$) of singles, $24,345$ ($6.7\%$) of doubles, $2356$ ($.6\%$) of triples, and $17,624$ ($4.9\%$) of home runs. The predictors of interest are organized as follows:
+
+1. Batter-Controlled Predictors
+    + Launch Speed: The velocity the ball is hit.
+    + Launch Angle: The angle of the ball's trajectory, relative the ground.
+    + Spray Angle: The angle of of the ball's trajectory, relative the field. TODO Joe add citation
+    + Strike Zone, Top: Whether the ball is in the top of the batter's strike zone.
+    + Strike Zone, Bottom: Whether the ball is in the bottom of the batter's strike zone.
+    + Ball/Strike Count: The current number of balls/strikes in the count.
+    + Batting Handedness: The side of the plate from which the batter hits.
+    + Sprint Speed: The top sprint speed of the batter.
+2. Non-Batter-Controlled Predictors
+    + Release Position of Pitch (x/y/z): The position the ball is release from.
+    + Velocity of Pitch (x/y/z/cumulative): The velocity of the pitch.
+    + Zone: The categorical zone in which the ball crosses the plate.
+    + Pitcher Throwing Handedness: The hand from which the pitcher throws.
+    + Movement of Pitch (x,z): The relative drop of the pitch in the x and z dimensions.
+    + Plate Location (x, z): The location at which the ball crosses the plate.
+    + Runner Positions: Whether there are runners on $1^{st}$, $2^{nd}$, or $3^{rd}$ bases at the time of the at-bat.
+    + Acceleration of Pitch (x/y/z/cumulative): THe acceleration of the pitch.
+    + Effective Speed: The effective speed of the pitch, based on where the pitcher releases the ball.
+    + Release Spin Rate: The spin rate of the pitch.
+    + Release Extension: The extension point at which the pitch is released.
+    + Pitch Number: Total number of pitches thrown.
+    + Pitch Name: The label of the pitch type (fastball, curveball, changeup, etc.).
+    + Fielder Defensive Statistics: The defensive rating of each of the $9$ fielders. TODO what statistic is used?
+    + Score of Batter's Team: Score of the team the batter is on.
+    + Score of Pitcher's Team: Score of the team the pitcher is on.
+    + Infield Fielding Alignment: The label of the infield fielding strategy employed (traditional, overshift, extra infielder, etc.).
+    + Outfield Fielding Alignment: The label of the outfield fielding strategy employed (traditional, overshift, extra outfielder, etc.).
+    + Inning Number: The number of the inning.
+    + Inning Half: Whether it is the top or bottom of the inning.
+    
 ## Exploratory analysis
 
 ## Model
 
-For this analysis, we chose to employ a random forest that inputs the predictors described above to predict one of the five batted ball outcomes. In the random forest model, we only considered batted balls that contained values for all the predictors above. 
+For this analysis, we chose to employ a Random Forest that inputs the predictors described above to predict one of the five batted ball outcomes. In the Random Forest model, we only considered batted balls that contained values for all the predictors above. 
 
-One reason for choosing a random forest is that many of the predictors are highly interactive in their propensity to produce certain outcomes. Another reason is that the random forest allows us to include an extensive set of features, so that we can identify which features are most important in predicting outcomes of batted balls. We expect that the features that are direct measurements of a batted ball, such as launch speed, launch angle, and spray angle, will be the most predictive of its outcome. However, we are also interested in identifying if other factors, such as attributes of the pitch, defense, or stadium, are important in predicting outcomes. Additionally, by including an expansive set of features, we can assess how well the most modern, cutting-edge measurements of baseball plays can predict their outcomes.
+One reason for choosing a Random Forest is that many of the predictors are highly interactive in their propensity to produce certain outcomes. Another reason is that the Random Forest allows us to include an extensive set of features, so that we can identify which features are most important in predicting outcomes of batted balls. We expect that the features that are direct measurements of a batted ball, such as launch speed, launch angle, and spray angle, will be the most predictive of its outcome. However, we are also interested in identifying if other factors, such as attributes of the pitch, defense, or stadium, are important in predicting outcomes. Additionally, by including an expansive set of features, we can assess how well the most modern, cutting-edge measurements of baseball plays can predict their outcomes.
+
+### SPORF
+
+The particular implementation of Random Forest employed is [SPORF](https://arxiv.org/abs/1506.03410), or Sparse Projection Oblique Randomer Forests. Traditional Random Forests build upon the axis-aligned decision tree: that is, the trees split only along features that exist within the feature space of the dataset of interest. By contrast, oblique decision trees extend the split criterion to along one or more features. For a simple example, consider for instance when the outcome of interest is whether or not it is raining today. If we know that it rained yesterday, and we know that it is forecast to rain tomorrow, either one of these pieces of information may individually provide valuable insights into predicting whether or not it is raining today. However, considered together; that is, that it rained yesterday and it is forecast to rain tomorrow, these two pieces of information may yield a much stronger prediction to whether it is raining today. While an axis-aligned decision tree may well be capable of generating trees that can recognize this particular pattern, as the feature space widens, the tree depth to identify these "oblique" tendencies in the feature space grow exponentially. Trees of substantial depth unfortunately tend to lose generalizability and have a tendency to overfit the sample data. Fortunately, numerous strategies have been introduced to generate "oblique" ensembles: random forests built upon decision trees wholse split criterions include linear combinations of the individual features. SPORF was developed to accomodate these oblique strategies, while providing many of the computational benefits of a traditional axis-aligned method (particularly, computational efficiency, insensitivity to a large proportion of noisy inputs, and interpretability). For these reasons, as well as the ease-of-use of `SPORF` in the `R` programming language and heavy `C` optimization, we choose to use `SPORF`s for our project.
 
 ### rfxwOBA
 
@@ -88,7 +125,21 @@ The data exported from Baseball Savant also includes a column labeled `estimated
 
 ## Results
 
+Random Forests are trained using the $359,781$ samples of complete-predictor batted-ball event data. For model evaluation, we consider two cross-validative strategies. First, we perform traditional $50$-fold Cross Validation, in which we separate the samples randomly into $50$ folds, and for iterations $i=1, \hdots, 50$, train the model on all folds $j \neq i$, and use the $i^{th}$ fold as the testing set. The purpose of this approach is primarily for developing insights into how effectively, the model is making predictions, and in particular, where and when it is getting predictions wrong. We evaluate our strategy using a Confusion Matrix. A confusion matrix is constructed by generating a $K\times K$ matrix, where the row-wise entries are the predicted outcomes, and the column-wise entries are the true outcomes. A single $(i, j)$ entry represents the fraction times the true items of class $j$ are predicted to be part of the $i^{th}$ class. Ideally, an effective model will have true outcomes predominantly being predicted into the correct class, in which the on-diagonal entries will exceed the off-diagonal entries.
+
+[50 Fold XV ](../rf/figs/xv_folds.png)
+
+Figure 1: The average confusion matrix after $50$-fold cross-validation. Individual cells are colored by the fraction of samples with the true outcome indicated by the column predicted into the predicted outcome indicated by the row (that is, each row sums to $100$), and the average percent is reported along with the standard deviation across all entries. As we can see based on the confusion matrix, the model performs exceptionally well for both Outs and Home runs, as these two classes individually see an accuracy rate of $93.8\%$ and $72.6\%$, with the accuracy for singles more modest at $52.9\%$. The model is relatively ineffective for predicting both doubles and triples, which are most commonly mislabelled as outs. Of note, Outs represent over $60\%$ of the dataset, so it is not surprising that most of the incorrect predictions are mislabelled as outs (as the leaf nodes will consist $>60\%$ of outs).
+
+Second, we compare our model to the "random guess" classifier, which simply guesses the maximally proportionate class. An effective classifier will certainly outperform the "random guess" classifier, so this serves as an effective benchmark for a minimal acceptable classification accuracy. The average accuracy is $79.0\pm.4\%$, whereas the random guess classifier has only $66.6\pm .6\%$ accuracy, indicating that our SPORF classifier substantially outperforms the random guess classifier. 
+
+### Random Forest Feature Importances
+
+Second, we are concerned with discerning which features provide, or do not provide, meaningful insights into our predictive task. To this extent, we consider two popular metrics for evaluating the "importance" of features: the Gini importance (G, for Gini) and simply counting the number of times a feature is used across the forest (C, for count). Unlike the count strategy, the gini importance weights a feature's importance by how much it improves the purity a resulting split criterion divides the sample data at a particular node (that is, how much it improves the separation of classes within the dataset). For instance in a $2$ class problem, if a particular feature and threshold chosen at a particular node divides the data evenly into the two classes, this feature would receive a high importance, whereas a feature and threshold chosen at a particular node that does little to divide between the two classes would have a lower importance. Both strategies are popular for determining the importance of features leveraged in a Random Forest.
+
 ### Random Forest Prediction of Event Outcomes
+
+
 
 ### rfxwOBA
 
