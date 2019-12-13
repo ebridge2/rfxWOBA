@@ -225,9 +225,32 @@ wOBA = \frac{0.7*(W+HBP)+0.9*S+1.25*D+1.6*T+2*HR}{PA-SacB}
 </div>
 <div id="model" class="section level2">
 <h2>Model</h2>
+<p>For this analysis, we chose to employ a random forest that inputs the predictors described above to predict one of the five batted ball outcomes. In the random forest model, we only considered batted balls that contained values for all the predictors above.</p>
+<p>One reason for choosing a random forest is that many of the predictors are highly interactive in their propensity to produce certain outcomes. Another reason is that the random forest allows us to include an extensive set of features, so that we can identify which features are most important in predicting outcomes of batted balls. We expect that the features that are direct measurements of a batted ball, such as launch speed, launch angle, and spray angle, will be the most predictive of its outcome. However, we are also interested in identifying if other factors, such as attributes of the pitch, defense, or stadium, are important in predicting outcomes. Additionally, by including an expansive set of features, we can assess how well the most modern, cutting-edge measurements of baseball plays can predict their outcomes.</p>
+<div id="rfxwoba" class="section level3">
+<h3>rfxwOBA</h3>
+<p>As stated above, we will use the results of the random forest model to produce our own expectation of <em>wOBA</em>. In order to produce this, we will use a permutation strategy to create a marginal distribution of expected <em>wOBA</em> for each batted ball event. The process will be executed as follows:</p>
+<ul>
+<li>Assign the appropriate wOBA weights to all non-batted ball events (0 for strikeouts and 0.7 for walks and hit by pitch)</li>
+<li>Subset the data to only include the batted ball events and randomly impute any missing predictors from the complete cases</li>
+<li>Randomly shuffle the rows for every predictor except the five predictors which are direct measurements of the batter (handedness, launch speed, launch angle, spray angle and sprint speed)</li>
+<li>Produce predicted probabilities of each outcome for each event by running this modified data set through the random forest</li>
+<li>Linearly combine these predicted probabilities with the corresponding <em>wOBA</em> weights to produce an expected <em>wOBA</em> value for each event</li>
+</ul>
+<p>We will repeat this procedure 1000 times to produce 1000 expected <em>wOBA</em> values for each event. We will consider this to be a sample from the distribution of expected <em>wOBA</em> values for an event given the five “batter” measurements held constant. Using these values for a given player over a season, we can produce 1000 expected <em>wOBA</em> values for that player in that season. We can visaulize and analyze the distribution of these expected <em>wOBA</em> values, as well as produce a point estimate of expected <em>wOBA</em> by taking the mean of the 1000 values. We will refer to this point estimate as <em>rfxwOBA</em> or “random forest expected wOBA”.</p>
+<p>We will produce these distributions and metrics in two ways. Once by obtaining estimates of the entire data set (2017-2019 seasons) on a model trained on the complete cases of the entire data set. We will also fit three additional random forest models, with each of them holding out one season’s data from the training set. Then we will produce the estimates for the events in a given season using the model that did not include that season’s data in the training set.</p>
+<p>In order to assess the validity of this metric for projecting a player’s future performance, we will calculate league-wide correlations of a season’s <em>rfxwOBA</em> to the following season’s <em>wOBA</em>, and comparing it to the correlation of the season’s <em>wOBA</em> to the following season’s <em>wOBA</em>. A stronger association between <em>rfxwOBA</em> and next season’s <em>wOBA</em> than <em>wOBA</em> and next season’s <em>wOBA</em> will suggest evidence that <em>rfxwOBA</em> is a better predictor of a player’s future performance than actual <em>wOBA</em>. We will also assess the reliability of <em>rfxwOBA</em> by calculating the correlation of league-wide <em>rfxwOBA</em> in a season to itself in the following season.</p>
+<p>The data exported from Baseball Savant also includes a column labeled <code>estimated_woba_using_speedangle</code> for each event. There is not documentation on how these values are calculated. We will also produce expected <em>wOBA</em> values from these values, referred to as “baseball savant expected wOBA” or <em>bsxwOBA</em>. We will also consider this metric in assessing player projection and metric reliability.</p>
+</div>
 </div>
 <div id="results" class="section level2">
 <h2>Results</h2>
+<div id="random-forest-prediction-of-event-outcomes" class="section level3">
+<h3>Random Forest Prediction of Event Outcomes</h3>
+</div>
+<div id="rfxwoba-1" class="section level3">
+<h3>rfxwOBA</h3>
+</div>
 </div>
 <div id="conclusion" class="section level2">
 <h2>Conclusion</h2>
