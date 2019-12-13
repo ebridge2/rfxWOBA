@@ -1,0 +1,127 @@
+<table class="table table-striped" style="margin-left: auto; margin-right: auto;">
+ <thead>
+  <tr>
+   <th style="text-align:left;"> Batter Name </th>
+   <th style="text-align:right;"> PA </th>
+   <th style="text-align:right;"> PA Next Season </th>
+   <th style="text-align:right;"> wOBA </th>
+   <th style="text-align:right;"> wOBA Next Season </th>
+   <th style="text-align:right;"> rfxwOBA </th>
+   <th style="text-align:right;"> rfxwOBA Next Season </th>
+   <th style="text-align:right;"> bsxwOBA </th>
+   <th style="text-align:right;"> bsxwOBA Next Season </th>
+  </tr>
+ </thead>
+<tbody>
+  <tr>
+   <td style="text-align:left;"> J.D. Martinez </td>
+   <td style="text-align:right;"> 481 </td>
+   <td style="text-align:right;"> 638 </td>
+   <td style="text-align:right;"> 0.4367983 </td>
+   <td style="text-align:right;"> 0.4298589 </td>
+   <td style="text-align:right;"> 0.4098287 </td>
+   <td style="text-align:right;"> 0.4224080 </td>
+   <td style="text-align:right;"> 0.4322952 </td>
+   <td style="text-align:right;"> 0.4182053 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Mike Trout </td>
+   <td style="text-align:right;"> 492 </td>
+   <td style="text-align:right;"> 582 </td>
+   <td style="text-align:right;"> 0.4431911 </td>
+   <td style="text-align:right;"> 0.4489691 </td>
+   <td style="text-align:right;"> 0.4272841 </td>
+   <td style="text-align:right;"> 0.4378344 </td>
+   <td style="text-align:right;"> 0.4213028 </td>
+   <td style="text-align:right;"> 0.4274588 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Luke Voit </td>
+   <td style="text-align:right;"> 124 </td>
+   <td style="text-align:right;"> 161 </td>
+   <td style="text-align:right;"> 0.3205645 </td>
+   <td style="text-align:right;"> 0.4487578 </td>
+   <td style="text-align:right;"> 0.3513339 </td>
+   <td style="text-align:right;"> 0.4244141 </td>
+   <td style="text-align:right;"> 0.3427742 </td>
+   <td style="text-align:right;"> 0.4414596 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Mookie Betts </td>
+   <td style="text-align:right;"> 703 </td>
+   <td style="text-align:right;"> 606 </td>
+   <td style="text-align:right;"> 0.3446657 </td>
+   <td style="text-align:right;"> 0.4518977 </td>
+   <td style="text-align:right;"> 0.3633639 </td>
+   <td style="text-align:right;"> 0.4481716 </td>
+   <td style="text-align:right;"> 0.3425704 </td>
+   <td style="text-align:right;"> 0.4290594 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Howie Kendrick </td>
+   <td style="text-align:right;"> 159 </td>
+   <td style="text-align:right;"> 369 </td>
+   <td style="text-align:right;"> 0.3452830 </td>
+   <td style="text-align:right;"> 0.4117886 </td>
+   <td style="text-align:right;"> 0.3392128 </td>
+   <td style="text-align:right;"> 0.4285193 </td>
+   <td style="text-align:right;"> 0.3155031 </td>
+   <td style="text-align:right;"> 0.4198238 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Nelson Cruz </td>
+   <td style="text-align:right;"> 586 </td>
+   <td style="text-align:right;"> 512 </td>
+   <td style="text-align:right;"> 0.3621160 </td>
+   <td style="text-align:right;"> 0.4289062 </td>
+   <td style="text-align:right;"> 0.3978202 </td>
+   <td style="text-align:right;"> 0.4129502 </td>
+   <td style="text-align:right;"> 0.3949471 </td>
+   <td style="text-align:right;"> 0.4190566 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Anthony Rendon </td>
+   <td style="text-align:right;"> 592 </td>
+   <td style="text-align:right;"> 638 </td>
+   <td style="text-align:right;"> 0.3858108 </td>
+   <td style="text-align:right;"> 0.4236677 </td>
+   <td style="text-align:right;"> 0.4076572 </td>
+   <td style="text-align:right;"> 0.4288659 </td>
+   <td style="text-align:right;"> 0.3871757 </td>
+   <td style="text-align:right;"> 0.4078668 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Mike Trout </td>
+   <td style="text-align:right;"> 582 </td>
+   <td style="text-align:right;"> 586 </td>
+   <td style="text-align:right;"> 0.4489691 </td>
+   <td style="text-align:right;"> 0.4471843 </td>
+   <td style="text-align:right;"> 0.4378344 </td>
+   <td style="text-align:right;"> 0.4549453 </td>
+   <td style="text-align:right;"> 0.4274588 </td>
+   <td style="text-align:right;"> 0.4506451 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Christian Yelich </td>
+   <td style="text-align:right;"> 649 </td>
+   <td style="text-align:right;"> 564 </td>
+   <td style="text-align:right;"> 0.4249615 </td>
+   <td style="text-align:right;"> 0.4538121 </td>
+   <td style="text-align:right;"> 0.4186124 </td>
+   <td style="text-align:right;"> 0.4231870 </td>
+   <td style="text-align:right;"> 0.4036240 </td>
+   <td style="text-align:right;"> 0.4170550 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Cody Bellinger </td>
+   <td style="text-align:right;"> 623 </td>
+   <td style="text-align:right;"> 640 </td>
+   <td style="text-align:right;"> 0.3479936 </td>
+   <td style="text-align:right;"> 0.4259375 </td>
+   <td style="text-align:right;"> 0.3445630 </td>
+   <td style="text-align:right;"> 0.4307965 </td>
+   <td style="text-align:right;"> 0.3199535 </td>
+   <td style="text-align:right;"> 0.4224078 </td>
+  </tr>
+</tbody>
+</table>
