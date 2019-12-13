@@ -40,12 +40,14 @@ Baseball statistics have been recorded and studied for well over one hundred yea
 In this project, we are going to focus on the [sabermetric statistic *wOBA*](https://library.fangraphs.com/offense/woba/), which stands for "weighted on-base percentage." For a given sequences of a batter's plate appearances, is calculated as follows:
 
 \[
-wOBA = \frac{0.7\cdot(W+HBP)+0.9\cdot S+1.25\cdot D+1.6 \cdot T+2 \cdot HR}{PA-SacB}
+wOBA = \frac{0.7\cdot(BB+HBP)+0.9\cdot S+1.25\cdot D+1.6 \cdot T+2 \cdot HR}{PA-SacB}
 \]
 
-where W is the number of walks, HBP is the number of times hit-by-pitch (same outcome as walk), S is the number of singles, D is the number of doubles, T is the number of triples, HR is the number of home runs, PA is the number of plate appearances, and SacB is the number of sacrifice bunts. The weights in the numerator are calculated so as to represent the number of additional runs scored that can be expected by a given batting outcome, relative to that batter instead getting out. The denominator normalizes the statistic to account for the fact that some batters have more opportunities to hit (plate appearances) than others. (Sacrifice bunts are a technicality that can be ignored for the purposes of understanding.)
+where BB is the number of walks, HBP is the number of times hit-by-pitch (same outcome as walk), S is the number of singles, D is the number of doubles, T is the number of triples, HR is the number of home runs, PA is the number of plate appearances, and SacB is the number of sacrifice bunts. The weights in the numerator are calculated so as to represent the number of additional runs scored that can be expected by a given batting outcome, relative to that batter instead getting out. The denominator normalizes the statistic to account for the fact that some batters have more opportunities to hit (plate appearances) than others. (Sacrifice bunts are a technicality that can be ignored for the purposes of understanding.) 
 
 Therefore, $wOBA$ may be seen as a kind of "gold-standard" batting statistic; a player's $wOBA$ represents a relative measure of how many runs he tends to contribute each time he goes to bat.
+
+*wOBA* weights vary slightly from year-to-year, but for the purposes of this project we use weights that are displayed in the Baseball Savant data set where the data was obtained. Additionally, *wOBA* often includes inputs from the baserunning event, stolen bases. In this project we will not be considering these events. Note that this means that our calculations of true *wOBA* may differ slightly from those published on popular baseball statistic websites.
 
 ### Project aim
 
@@ -59,6 +61,7 @@ Using Statcast data, we may be able to identify the value of *batter-based* acti
 
 This concept is not new; the analytics firm at Statcast calculates a statistic called [*xwOBA*](http://m.mlb.com/glossary/statcast/expected-woba), short for "expected wOBA," which attempts to determine the *wOBA* that could be expected from the batter's contact with the ball, as measured by launch speed, or the velocity at which the ball leaves the bat, and launch angle, or the vertical angle at which the ball leaves the bat. However, to our knowledge the algorithm used to calculate the statistic is not publicly available. We will calculate our own version of expected wOBA which uses many more variables than what Statcast claims to. We believe that one of these variables, sprint speed, should add value to the model because it is a batter-level variable that is an important factor in whether a given batted ball is converted into a single, double, or triple. Another factor that we believe will be important is spray angle, which is an engineered feature that approximates the horizontal angle describing the direction in the field that the ball was hit. We also include other variables *outside* the batter's control and attempt to marginalize over their league-distribution. It is debatable whether such a procedure should produce better predictions of *wOBA* than simply omitting those variables from the beginning, but including them allows us to answer independent questions of interest with regard to what external factors affect batting outcomes.
 
+The intended audience for this project ranges from baseball fans interested in learning more about baseball and what factors influence each play to baseball analysts who are interested in creating new and exciting methods in evaluating batter performance.
 
 ### Data 
 
@@ -102,7 +105,55 @@ In the data set, $360,967$ batted ball events contained complete data for all th
 
 ### Launch Angle & Launch Speed
 
-Since the advent of Statcast, launch angle and launch speed have widely been considered the best indicators of batted ball quality. Batted 
+Since the advent of Statcast, launch angle and launch speed have widely been considered the best indicators of batted ball quality. Some combinations of launch speed and angle tend to produce positive outcomes (singles, doubles, triples or home runs), while others tend to produce outs. This can be seen in the plot below.
+
+![Figure 1: Batted ball outcome by launch angle and launch speed](../eda/figs/hits/BattedBalls.png)
+
+In this plot, we color the outcome of each batted ball from 2017-2019 and plot them by their launch angle and launch speed. A launch angle of $0$ degrees indicates a batted ball hit exactly parallel with the ground, a launch angle of $-90$ degrees indicates a batted ball hit directly down toward the ground, and a launch angle of $90$ degrees indicates a batted ball hit directly upwards away from the ground. We can see that home runs tend to be hit between launch angles of $20$ and $40$ degrees and launch speeds near or above $100$ miles per hour.
+
+### Spray Angle and Launch Speed
+
+We also believe that spray angle, or the direction in the field that the batter hits the ball may be important in determining the outcome. This can be seen in the plot below.
+
+![Figure 2: Batted ball outcome by spray angle and launch speed](../eda/figs/hits/BattedBalls2.png)
+
+In this plot, we color the outcome of each batted ball from 2017-2019 and plot them by their launch angle and launch speed. A spray angle of $0$ degrees indicates a batted ball hit directly toward the pitcher's mound, a launch angle of $-45$ degrees indicates a batted ball hit directly toward third base, and a launch angle of $45$ degrees indicates a batted ball hit directly toward first base. One takeaway from this plot is that a relatively large mass of doubles occur from batted balls hit with launch speed near or above $90$ miles per hour and spray angle nearly directly toward first or third base.
+
+### Sprint Speed
+
+We also believe that the top sprint speed of a player may be important in their batted ball outcomes. Below we display a plot of the densities of batter sprint speed for each batted ball outcome.
+
+![Figure 3: Distribution of sprint speed for each batted ball outcome](../eda/figs/hits/Sprint_speed.png)
+
+In this plot we can see that the distribution of sprint speed is extremely similar for every type of batted ball outcomes except for triples. The plot displays that triples generally result from batters who have higher top sprint speeds as compared to other outcomes.
+
+### Defense
+
+We also expect that the opposing defense may have some impact on the results of batted balls. To visualize this we created boxplots to observe the distribution of player DRS per $1,000$ innings for each position across each of the outcomes. Shortstops are often considered the most important defensive position on the field, so below we display the distributions of shortstop DRS per $1,000$ innings for each batted ball outcome.
+
+![Figure 4: Shortstop DRS/1,000 Inning for each batted ball outcome](../eda/figs/Def/Def6.png)
+
+We can see that there is not a noticeable difference in these distributions for any batted ball outcome. In this plot we can see that the median DRS per $1,000$ innings is about $0$ for every batted ball outcome, and that each distribution is approximately symmetric. We created these plots for every position and observed similar results for each defensive position, with the exception of one.
+
+Below we display the distributions of right fielders' DRS per $1,000$ innings for each outcome.
+
+![Figure 5: Shortstop DRS/1,000 Inning for each batted ball outcome](../eda/figs/Def/Def9.png)
+
+From this plot we can see that on triples, the median DRS per $1,000$ innings of the right fielder tends to be lower than on other batted ball events. This is fairly intuitive because the right fielder is the position furthest from third base, which is where the batter must reach in order to acheive a triple. So, right fielders who are less skilled or slower at getting to a batted ball in right field allow the batter a relatively long period of time to reach third base.
+
+### Stadium
+
+We also believe that stadium effects may play some importance to batted ball outcomes. Major League Baseball stadiums have unique dimensions. Additionally climate conditions in various cities may lend themselves to a higher propensity of certain types of batted balls. Because of this, many stadiums are conventionally thought to be "hitters parks" or "pitchers parks". Below we display the raw number of home runs in each stadium from 2017-2019.
+
+![Figure 6: Home runs by stadium, 2017-2019](../eda/figs/Stadium/HR.png)
+
+This shows that there is some variance across Major League Baseball stadiums in the amount of home runs that occur. This could of course also be influenced by other factors, such as the quality of the pitchers that pitch in the stadium most often.
+
+Another interesting outcome to explore is the frequency of triples by stadium, since triples are the most rare batted ball outcome.
+
+![Figure 7: Triples by stadium, 2017](../eda/figs/Stadium/Triples.png)
+
+This plot shows we observe a many more triples in a handful of stadiums, such as the stadiums in Arizona, Detroit, San Francisco, and especially Colorado, than we do in most stadiums across the league. 
 
 ## Model
 
@@ -130,7 +181,7 @@ We will repeat this procedure 1000 times to produce 1000 expected *wOBA* values 
 
 We will produce these distributions and metrics in two ways. Once by obtaining estimates of the entire data set (2017-2019 seasons) on a model trained on the complete cases of the entire data set. We will also fit three additional random forest models, with each of them holding out one season's data from the training set. Then we will produce the estimates for the events in a given season using the model that did not include that season's data in the training set.
 
-In order to assess the validity of this metric for projecting a player's future performance, we will calculate league-wide correlations of a season's *rfxwOBA* to the following season's *wOBA*, and comparing it to the correlation of the season's *wOBA* to the following season's *wOBA*. A stronger association between *rfxwOBA* and next season's *wOBA* than *wOBA* and next season's *wOBA* will suggest evidence that *rfxwOBA* is a better predictor of a player's future performance than actual *wOBA*. We will also assess the reliability of *rfxwOBA* by calculating the correlation of league-wide *rfxwOBA* in a season to itself in the following season.
+In order to assess the validity of this metric for projecting a player's future performance, we will calculate league-wide correlations of a season's *rfxwOBA* to the following season's *wOBA*, and comparing it to the correlation of the season's *wOBA* to the following season's *wOBA*. A stronger association between *rfxwOBA* and next season's *wOBA* than *wOBA* and next season's *wOBA* will suggest evidence that *rfxwOBA* is a better predictor of a player's future performance than actual *wOBA*. We will also assess the reliability of *rfxwOBA* by calculating the correlation of league-wide *rfxwOBA* in a season to *rfxwOBA* in the following season.
 
 The data exported from Baseball Savant also includes a column labeled `estimated_woba_using_speedangle` for each event. There is not documentation on how these values are calculated. We will also produce expected *wOBA* values from these values, referred to as "baseball savant expected wOBA" or *bsxwOBA*. We will also consider this metric in assessing player projection and metric reliability.
 
@@ -140,7 +191,7 @@ The data exported from Baseball Savant also includes a column labeled `estimated
 
 Random Forests are trained using the $359,781$ samples of complete-predictor batted-ball event data. For model evaluation, we consider two cross-validative strategies. First, we perform traditional $50$-fold Cross Validation, in which we separate the samples randomly into $50$ folds, and for iterations $i=1, ..., 50$, train the model on all folds $j \neq i$, and use the $i^{th}$ fold as the testing set. The purpose of this approach is primarily for developing insights into how effectively, the model is making predictions, and in particular, where and when it is getting predictions wrong. We evaluate our strategy using a Confusion Matrix. A confusion matrix is constructed by generating a $K\times K$ matrix, where the row-wise entries are the predicted outcomes, and the column-wise entries are the true outcomes. A single $(i, j)$ entry represents the fraction times the true items of class $j$ are predicted to be part of the $i^{th}$ class. Ideally, an effective model will have true outcomes predominantly being predicted into the correct class, in which the on-diagonal entries will exceed the off-diagonal entries.
 
-![Figure 1: The average confusion matrix after $50$-fold cross-validation. Individual cells are colored by the fraction of samples with the true outcome indicated by the column predicted into the predicted outcome indicated by the row (that is, each row sums to $100$), and the average percent is reported along with the standard deviation across all entries. As we can see based on the confusion matrix, the model performs exceptionally well for both Outs and Home runs, as these two classes individually see an accuracy rate of $93.8\%$ and $72.6\%$, with the accuracy for singles more modest at $52.9\%$. The model is relatively ineffective for predicting both doubles and triples, which are most commonly mislabelled as outs. Of note, Outs represent over $60\%$ of the dataset, so it is not surprising that most of the incorrect predictions are mislabelled as outs (as the leaf nodes will consist $>60\%$ of outs).](../rf/figs/xv_folds.png)
+![Figure 8: The average confusion matrix after $50$-fold cross-validation. Individual cells are colored by the fraction of samples with the true outcome indicated by the column predicted into the predicted outcome indicated by the row (that is, each row sums to $100$), and the average percent is reported along with the standard deviation across all entries. As we can see based on the confusion matrix, the model performs exceptionally well for both Outs and Home runs, as these two classes individually see an accuracy rate of $93.8\%$ and $72.6\%$, with the accuracy for singles more modest at $52.9\%$. The model is relatively ineffective for predicting both doubles and triples, which are most commonly mislabelled as outs. Of note, Outs represent over $60\%$ of the dataset, so it is not surprising that most of the incorrect predictions are mislabelled as outs (as the leaf nodes will consist $>60\%$ of outs).](../rf/figs/xv_folds.png)
 
 Second, we compare our model to the "random guess" classifier, which simply guesses the maximally proportionate class. An effective classifier will certainly outperform the "random guess" classifier, so this serves as an effective benchmark for a minimal acceptable classification accuracy. The average accuracy is $79.0\pm.4\%$, whereas the random guess classifier has only $66.6\pm .6\%$ accuracy, indicating that our SPORF classifier substantially outperforms the random guess classifier. 
 
@@ -148,9 +199,400 @@ Second, we compare our model to the "random guess" classifier, which simply gues
 
 Second, we are concerned with discerning which features provide, or do not provide, meaningful insights into our predictive task. To this extent, we consider two popular metrics for evaluating the "importance" of features: the Gini importance (G, for Gini) and simply counting the number of times a feature is used across the forest (C, for count). Unlike the count strategy, the gini importance weights a feature's importance by how much it improves the purity a resulting split criterion divides the sample data at a particular node (that is, how much it improves the separation of classes within the dataset). For instance in a $2$ class problem, if a particular feature and threshold chosen at a particular node divides the data evenly into the two classes, this feature would receive a high importance, whereas a feature and threshold chosen at a particular node that does little to divide between the two classes would have a lower importance. Both strategies are popular for determining the importance of features leveraged in a Random Forest.
 
-![Figure 2: Assessing the relative importance of features, as determined by the Gini Importance Metric or the Count Metric. Both metrics are normalized across features by the maximum for each respective metric, to make the scales comparable. The top ten features by importance are identical across both Gini and the Count metric. Of note, the Gini clearly places higher relative importance on the Launch Angle, which has the interpretation that the launch angle is extremely effective for creating splits that result in more pure sub-samples at nodes within the random forest.](../rf/figs/feat_imp.png)
+![Figure 9: Assessing the relative importance of features, as determined by the Gini Importance Metric or the Count Metric. Both metrics are normalized across features by the maximum for each respective metric, to make the scales comparable. The top ten features by importance are identical across both Gini and the Count metric. Of note, the Gini clearly places higher relative importance on the Launch Angle, which has the interpretation that the launch angle is extremely effective for creating splits that result in more pure sub-samples at nodes within the random forest.](../rf/figs/feat_imp.png)
 
 
 ### rfxwOBA
+
+#### Projection
+
+#### Using a model trained on all complete data
+
+The table below displays $10$ players who had at least $100$ plate appearances in consecutive years from the data set with *wOBA*, *rfxwOBA*, and *bsxwOBA* values from one season and the following season. 
+
+<table class="table table-striped" style="margin-left: auto; margin-right: auto;">
+ <thead>
+  <tr>
+   <th style="text-align:left;"> Batter Name </th>
+   <th style="text-align:right;"> PA </th>
+   <th style="text-align:right;"> PA Next Season </th>
+   <th style="text-align:right;"> wOBA </th>
+   <th style="text-align:right;"> wOBA Next Season </th>
+   <th style="text-align:right;"> rfxwOBA </th>
+   <th style="text-align:right;"> rfxwOBA Next Season </th>
+   <th style="text-align:right;"> bsxwOBA </th>
+   <th style="text-align:right;"> bsxwOBA Next Season </th>
+  </tr>
+ </thead>
+<tbody>
+  <tr>
+   <td style="text-align:left;"> J.D. Martinez </td>
+   <td style="text-align:right;"> 481 </td>
+   <td style="text-align:right;"> 638 </td>
+   <td style="text-align:right;"> 0.4367983 </td>
+   <td style="text-align:right;"> 0.4298589 </td>
+   <td style="text-align:right;"> 0.4098287 </td>
+   <td style="text-align:right;"> 0.4224080 </td>
+   <td style="text-align:right;"> 0.4322952 </td>
+   <td style="text-align:right;"> 0.4182053 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Mike Trout </td>
+   <td style="text-align:right;"> 492 </td>
+   <td style="text-align:right;"> 582 </td>
+   <td style="text-align:right;"> 0.4431911 </td>
+   <td style="text-align:right;"> 0.4489691 </td>
+   <td style="text-align:right;"> 0.4272841 </td>
+   <td style="text-align:right;"> 0.4378344 </td>
+   <td style="text-align:right;"> 0.4213028 </td>
+   <td style="text-align:right;"> 0.4274588 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Luke Voit </td>
+   <td style="text-align:right;"> 124 </td>
+   <td style="text-align:right;"> 161 </td>
+   <td style="text-align:right;"> 0.3205645 </td>
+   <td style="text-align:right;"> 0.4487578 </td>
+   <td style="text-align:right;"> 0.3513339 </td>
+   <td style="text-align:right;"> 0.4244141 </td>
+   <td style="text-align:right;"> 0.3427742 </td>
+   <td style="text-align:right;"> 0.4414596 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Mookie Betts </td>
+   <td style="text-align:right;"> 703 </td>
+   <td style="text-align:right;"> 606 </td>
+   <td style="text-align:right;"> 0.3446657 </td>
+   <td style="text-align:right;"> 0.4518977 </td>
+   <td style="text-align:right;"> 0.3633639 </td>
+   <td style="text-align:right;"> 0.4481716 </td>
+   <td style="text-align:right;"> 0.3425704 </td>
+   <td style="text-align:right;"> 0.4290594 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Howie Kendrick </td>
+   <td style="text-align:right;"> 159 </td>
+   <td style="text-align:right;"> 369 </td>
+   <td style="text-align:right;"> 0.3452830 </td>
+   <td style="text-align:right;"> 0.4117886 </td>
+   <td style="text-align:right;"> 0.3392128 </td>
+   <td style="text-align:right;"> 0.4285193 </td>
+   <td style="text-align:right;"> 0.3155031 </td>
+   <td style="text-align:right;"> 0.4198238 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Nelson Cruz </td>
+   <td style="text-align:right;"> 586 </td>
+   <td style="text-align:right;"> 512 </td>
+   <td style="text-align:right;"> 0.3621160 </td>
+   <td style="text-align:right;"> 0.4289062 </td>
+   <td style="text-align:right;"> 0.3978202 </td>
+   <td style="text-align:right;"> 0.4129502 </td>
+   <td style="text-align:right;"> 0.3949471 </td>
+   <td style="text-align:right;"> 0.4190566 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Anthony Rendon </td>
+   <td style="text-align:right;"> 592 </td>
+   <td style="text-align:right;"> 638 </td>
+   <td style="text-align:right;"> 0.3858108 </td>
+   <td style="text-align:right;"> 0.4236677 </td>
+   <td style="text-align:right;"> 0.4076572 </td>
+   <td style="text-align:right;"> 0.4288659 </td>
+   <td style="text-align:right;"> 0.3871757 </td>
+   <td style="text-align:right;"> 0.4078668 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Mike Trout </td>
+   <td style="text-align:right;"> 582 </td>
+   <td style="text-align:right;"> 586 </td>
+   <td style="text-align:right;"> 0.4489691 </td>
+   <td style="text-align:right;"> 0.4471843 </td>
+   <td style="text-align:right;"> 0.4378344 </td>
+   <td style="text-align:right;"> 0.4549453 </td>
+   <td style="text-align:right;"> 0.4274588 </td>
+   <td style="text-align:right;"> 0.4506451 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Christian Yelich </td>
+   <td style="text-align:right;"> 649 </td>
+   <td style="text-align:right;"> 564 </td>
+   <td style="text-align:right;"> 0.4249615 </td>
+   <td style="text-align:right;"> 0.4538121 </td>
+   <td style="text-align:right;"> 0.4186124 </td>
+   <td style="text-align:right;"> 0.4231870 </td>
+   <td style="text-align:right;"> 0.4036240 </td>
+   <td style="text-align:right;"> 0.4170550 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Cody Bellinger </td>
+   <td style="text-align:right;"> 623 </td>
+   <td style="text-align:right;"> 640 </td>
+   <td style="text-align:right;"> 0.3479936 </td>
+   <td style="text-align:right;"> 0.4259375 </td>
+   <td style="text-align:right;"> 0.3445630 </td>
+   <td style="text-align:right;"> 0.4307965 </td>
+   <td style="text-align:right;"> 0.3199535 </td>
+   <td style="text-align:right;"> 0.4224078 </td>
+  </tr>
+</tbody>
+</table>
+
+
+The following table displays correlation of each metric to the following season's *wOBA* with $95\%$ confidence intervals.
+
+<table class="table table-striped" style="margin-left: auto; margin-right: auto;">
+ <thead>
+  <tr>
+   <th style="text-align:left;"> Metric </th>
+   <th style="text-align:right;"> Correlation to Next Season wOBA </th>
+   <th style="text-align:left;"> 95% CI </th>
+  </tr>
+ </thead>
+<tbody>
+  <tr>
+   <td style="text-align:left;"> wOBA </td>
+   <td style="text-align:right;"> 0.424 </td>
+   <td style="text-align:left;"> [0.36, 0.483] </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> rfxwOBA </td>
+   <td style="text-align:right;"> 0.492 </td>
+   <td style="text-align:left;"> [0.433, 0.547] </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> bsxwOBA </td>
+   <td style="text-align:right;"> 0.445 </td>
+   <td style="text-align:left;"> [0.383, 0.503] </td>
+  </tr>
+</tbody>
+</table>
+
+
+The following table displays correlation of each metric to itself in the following season with $95\%$ confidence intervals.
+
+<table class="table table-striped" style="margin-left: auto; margin-right: auto;">
+ <thead>
+  <tr>
+   <th style="text-align:left;"> Metric </th>
+   <th style="text-align:right;"> Correlation to Itself Next Season </th>
+   <th style="text-align:left;"> 95% CI </th>
+  </tr>
+ </thead>
+<tbody>
+  <tr>
+   <td style="text-align:left;"> wOBA </td>
+   <td style="text-align:right;"> 0.424 </td>
+   <td style="text-align:left;"> [0.36, 0.483] </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> rfxwOBA </td>
+   <td style="text-align:right;"> 0.616 </td>
+   <td style="text-align:left;"> [0.568, 0.661] </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> bsxwOBA </td>
+   <td style="text-align:right;"> 0.625 </td>
+   <td style="text-align:left;"> [0.577, 0.669] </td>
+  </tr>
+</tbody>
+</table>
+
+
+#### Using models trained with one year held out at a time
+
+The table below displays $10$ players who had at least $100$ plate appearances in consecutive years from the data set with *wOBA*, *rfxwOBA*, and *bsxwOBA* values from one season and the following season. 
+
+
+<table class="table table-striped" style="margin-left: auto; margin-right: auto;">
+ <thead>
+  <tr>
+   <th style="text-align:left;"> Batter Name </th>
+   <th style="text-align:right;"> PA </th>
+   <th style="text-align:right;"> PA Next Season </th>
+   <th style="text-align:right;"> wOBA </th>
+   <th style="text-align:right;"> wOBA Next Season </th>
+   <th style="text-align:right;"> rfxwOBA </th>
+   <th style="text-align:right;"> rfxwOBA Next Season </th>
+   <th style="text-align:right;"> bsxwOBA </th>
+   <th style="text-align:right;"> bsxwOBA Next Season </th>
+  </tr>
+ </thead>
+<tbody>
+  <tr>
+   <td style="text-align:left;"> J.D. Martinez </td>
+   <td style="text-align:right;"> 481 </td>
+   <td style="text-align:right;"> 638 </td>
+   <td style="text-align:right;"> 0.4367983 </td>
+   <td style="text-align:right;"> 0.4298589 </td>
+   <td style="text-align:right;"> 0.4107280 </td>
+   <td style="text-align:right;"> 0.4270419 </td>
+   <td style="text-align:right;"> 0.4322952 </td>
+   <td style="text-align:right;"> 0.4182053 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Mike Trout </td>
+   <td style="text-align:right;"> 492 </td>
+   <td style="text-align:right;"> 582 </td>
+   <td style="text-align:right;"> 0.4431911 </td>
+   <td style="text-align:right;"> 0.4489691 </td>
+   <td style="text-align:right;"> 0.4307759 </td>
+   <td style="text-align:right;"> 0.4426089 </td>
+   <td style="text-align:right;"> 0.4213028 </td>
+   <td style="text-align:right;"> 0.4274588 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Luke Voit </td>
+   <td style="text-align:right;"> 124 </td>
+   <td style="text-align:right;"> 161 </td>
+   <td style="text-align:right;"> 0.3205645 </td>
+   <td style="text-align:right;"> 0.4487578 </td>
+   <td style="text-align:right;"> 0.3594430 </td>
+   <td style="text-align:right;"> 0.4294208 </td>
+   <td style="text-align:right;"> 0.3427742 </td>
+   <td style="text-align:right;"> 0.4414596 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Mookie Betts </td>
+   <td style="text-align:right;"> 703 </td>
+   <td style="text-align:right;"> 606 </td>
+   <td style="text-align:right;"> 0.3446657 </td>
+   <td style="text-align:right;"> 0.4518977 </td>
+   <td style="text-align:right;"> 0.3722538 </td>
+   <td style="text-align:right;"> 0.4542457 </td>
+   <td style="text-align:right;"> 0.3425704 </td>
+   <td style="text-align:right;"> 0.4290594 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Howie Kendrick </td>
+   <td style="text-align:right;"> 159 </td>
+   <td style="text-align:right;"> 369 </td>
+   <td style="text-align:right;"> 0.3452830 </td>
+   <td style="text-align:right;"> 0.4117886 </td>
+   <td style="text-align:right;"> 0.3442246 </td>
+   <td style="text-align:right;"> 0.4255450 </td>
+   <td style="text-align:right;"> 0.3155031 </td>
+   <td style="text-align:right;"> 0.4198238 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Nelson Cruz </td>
+   <td style="text-align:right;"> 586 </td>
+   <td style="text-align:right;"> 512 </td>
+   <td style="text-align:right;"> 0.3621160 </td>
+   <td style="text-align:right;"> 0.4289062 </td>
+   <td style="text-align:right;"> 0.4027774 </td>
+   <td style="text-align:right;"> 0.4091093 </td>
+   <td style="text-align:right;"> 0.3949471 </td>
+   <td style="text-align:right;"> 0.4190566 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Anthony Rendon </td>
+   <td style="text-align:right;"> 592 </td>
+   <td style="text-align:right;"> 638 </td>
+   <td style="text-align:right;"> 0.3858108 </td>
+   <td style="text-align:right;"> 0.4236677 </td>
+   <td style="text-align:right;"> 0.4132302 </td>
+   <td style="text-align:right;"> 0.4255989 </td>
+   <td style="text-align:right;"> 0.3871757 </td>
+   <td style="text-align:right;"> 0.4078668 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Mike Trout </td>
+   <td style="text-align:right;"> 582 </td>
+   <td style="text-align:right;"> 586 </td>
+   <td style="text-align:right;"> 0.4489691 </td>
+   <td style="text-align:right;"> 0.4471843 </td>
+   <td style="text-align:right;"> 0.4426089 </td>
+   <td style="text-align:right;"> 0.4509569 </td>
+   <td style="text-align:right;"> 0.4274588 </td>
+   <td style="text-align:right;"> 0.4506451 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Christian Yelich </td>
+   <td style="text-align:right;"> 649 </td>
+   <td style="text-align:right;"> 564 </td>
+   <td style="text-align:right;"> 0.4249615 </td>
+   <td style="text-align:right;"> 0.4538121 </td>
+   <td style="text-align:right;"> 0.4235065 </td>
+   <td style="text-align:right;"> 0.4198298 </td>
+   <td style="text-align:right;"> 0.4036240 </td>
+   <td style="text-align:right;"> 0.4170550 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Cody Bellinger </td>
+   <td style="text-align:right;"> 623 </td>
+   <td style="text-align:right;"> 640 </td>
+   <td style="text-align:right;"> 0.3479936 </td>
+   <td style="text-align:right;"> 0.4259375 </td>
+   <td style="text-align:right;"> 0.3495667 </td>
+   <td style="text-align:right;"> 0.4277740 </td>
+   <td style="text-align:right;"> 0.3199535 </td>
+   <td style="text-align:right;"> 0.4224078 </td>
+  </tr>
+</tbody>
+</table>
+
+
+The following table displays correlation of each metric to the following season's *wOBA* with $95\%$ confidence intervals.
+
+<table class="table table-striped" style="margin-left: auto; margin-right: auto;">
+ <thead>
+  <tr>
+   <th style="text-align:left;"> Metric </th>
+   <th style="text-align:right;"> Correlation to Next Season wOBA </th>
+   <th style="text-align:left;"> 95% CI </th>
+  </tr>
+ </thead>
+<tbody>
+  <tr>
+   <td style="text-align:left;"> wOBA </td>
+   <td style="text-align:right;"> 0.424 </td>
+   <td style="text-align:left;"> [0.36, 0.483] </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> rfxwOBA </td>
+   <td style="text-align:right;"> 0.490 </td>
+   <td style="text-align:left;"> [0.431, 0.545] </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> bsxwOBA </td>
+   <td style="text-align:right;"> 0.445 </td>
+   <td style="text-align:left;"> [0.383, 0.503] </td>
+  </tr>
+</tbody>
+</table>
+
+
+The following table displays correlation of each metric to itself in the following season with $95\%$ confidence intervals.
+
+<table class="table table-striped" style="margin-left: auto; margin-right: auto;">
+ <thead>
+  <tr>
+   <th style="text-align:left;"> Metric </th>
+   <th style="text-align:right;"> Correlation to Itself Next Season </th>
+   <th style="text-align:left;"> 95% CI </th>
+  </tr>
+ </thead>
+<tbody>
+  <tr>
+   <td style="text-align:left;"> wOBA </td>
+   <td style="text-align:right;"> 0.424 </td>
+   <td style="text-align:left;"> [0.36, 0.483] </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> rfxwOBA </td>
+   <td style="text-align:right;"> 0.616 </td>
+   <td style="text-align:left;"> [0.568, 0.661] </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> bsxwOBA </td>
+   <td style="text-align:right;"> 0.625 </td>
+   <td style="text-align:left;"> [0.577, 0.669] </td>
+  </tr>
+</tbody>
+</table>
+
+
+
 
 ## Conclusion
