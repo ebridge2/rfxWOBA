@@ -13,46 +13,21 @@ library(shiny)
 shinyUI(fluidPage(
   
   # Application title
-  titlePanel("Mouse Allergen and Asthma Data Visualizer"),
+  titlePanel("rfxwOBA 2017-2019"),
   
   # Sidebar with a slider input for number of bins 
   sidebarLayout(
     sidebarPanel(
-       selectInput("outcome",
-                   label="Select Outcome of Interest",
-                   choices=c("sxsgeneral",
-                             "sxsslowed",
-                             "sxsspeech",
-                             "sxsruncnt",
-                             "sxscoughcnt",
-                             "sxsmaxday"),
-                   selected="sxsmaxday"
-                   ),
-       selectInput("covariate",
-                   label="Select Input of Interest",
-                   choices=c("preFEVpp",
-                             "preFEVFVC",
-                             "dmouseb",
-                             "dmouseblog2",
-                             "dmousef",
-                             "dmouseflog2",
-                             "airmouse",
-                             "airmouselog2"),
-                   selected="dmouseb"
-                   ),
-       checkboxInput("color",
-                     label="Add Color",
-                     value=FALSE),
-       selectInput("colorBy",
-                   label="Color By",
-                   choices=c("group",
-                             "VisitNum",
-                             "gender"))
+       textInput("player.name",
+                 label="Input Player Name",
+                 value="Mike Trout"),
+       actionButton("randomPlayer",
+                    label="Get Random Player")
     ),
     
     # Show a plot of the generated distribution
     mainPanel(
-       plotOutput("symptomPlot")
+       plotOutput("rfxwOBA.Plots")
     )
   )
 ))

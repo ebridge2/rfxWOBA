@@ -66,12 +66,13 @@ get.rfxwOBA.dist <- function(dat, player.name, id.dat, yr, type, rfx) {
     colSums() %>%
     as.data.frame() 
   colnames(rfx.df) <- "rfxwOBA"
+  PA <- nrow(player.df)
   rfx.df %>% ggplot(aes(x=rfxwOBA/sum(player.df$woba_denom))) + 
     geom_density() + 
     geom_vline(aes(xintercept=sum(player.df$woba_value)/sum(player.df$woba_denom), color="Actual wOBA")) +
     geom_vline(aes(xintercept=sum(player.df$rfxwOBA)/sum(player.df$woba_denom), color="Mean rfxwOBA")) +
-    geom_vline(aes(xintercept=sum(player.df$xwOBA, na.rm=T)/sum(player.df$woba_denom), color="Baseball Savant xwOBA")) +
-    labs(title=paste0(player.name, " rfxwOBA Disribution - ", yr),
+    geom_vline(aes(xintercept=sum(player.df$xwOBA, na.rm=T)/sum(player.df$woba_denom), color="bsxwOBA")) +
+    labs(title=paste0(player.name, " rfxwOBA Disribution - ", yr, " (PA = ", PA, ")"),
          x="rfxwOBA", color="Statistic")
 }
 
@@ -90,7 +91,7 @@ rolling.rfxwOBA <- function(dat, player.name, id.dat, type) {
   player.df %>% ggplot(aes(x=game_date)) +
     geom_line(aes(y=cumsum(woba_value)/cumsum(woba_denom), color="Actual wOBA")) +
     geom_line(aes(y=cumsum(rfxwOBA)/cumsum(woba_denom), color="Mean rfxwOBA")) +
-    geom_line(aes(y=cumsum(xwOBA)/cumsum(woba_denom), color="Baseball Savant xwOBA")) +
+    geom_line(aes(y=cumsum(xwOBA)/cumsum(woba_denom), color="bsxwOBA")) +
     labs(title=paste0(player.name, " rolling wOBA vs. estimates: 2017-2019"),
          x="Date", y="Value", color="Statistic")
 }
@@ -105,15 +106,6 @@ woba.dat.batter <- woba.dat %>%
             xwOBA=sum(xwOBA)/sum(woba_denom),
             rfxwOBA=sum(rfxwOBA)/sum(woba_denom)) %>%
   gather(key="measure", value="value", -(batter:Year)) %>%
-  unite(temp, measure, Year) %>%
-  spread(temp, value)
-woba.dat.pitcher <- woba.dat %>% 
-  group_by(pitcher, Year) %>%
-  summarize(PA=n(), 
-            wOBA=sum(woba_value)/sum(woba_denom),
-            xwOBA=sum(xwOBA)/sum(woba_denom),
-            rfxwOBA=sum(rfxwOBA)/sum(woba_denom)) %>%
-  gather(key="measure", value="value", -(pitcher:Year)) %>%
   unite(temp, measure, Year) %>%
   spread(temp, value)
 
