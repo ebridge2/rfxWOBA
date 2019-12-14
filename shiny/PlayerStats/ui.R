@@ -21,13 +21,24 @@ shinyUI(fluidPage(
        textInput("player.name",
                  label="Input Player Name",
                  value="Mike Trout"),
+       selectInput("plotToDisplay",
+                   label="Select Plot",
+                   choices=c("2017 rfxwOBA",
+                             "2018 rfxwOBA",
+                             "2019 rfxwOBA",
+                             "Rolling Values"),
+                   selected="2017 rfxwOBA"),
        actionButton("randomPlayer",
                     label="Get Random Player")
     ),
     
     # Show a plot of the generated distribution
     mainPanel(
-       plotOutput("rfxwOBA.Plots")
+       plotOutput("rfxwOBA.Plots"),
+       textOutput("description1"),
+       textOutput("description2"),
+       textOutput("description3"),
+       textOutput("description4")
     )
   )
 ))

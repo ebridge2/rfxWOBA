@@ -92,3 +92,16 @@ X <- cbind(X.num, X.cat)
 write_rds(X, "../data/shiny/model_dat.rds")
 
 write_rds(descriptions, "../data/shiny/descriptions.rds")
+
+rfx.2019 <- read_rds("../data/projection/rfxwOBA_2019.rds")
+rfx.2018 <- read_rds("../data/projection/rfxwOBA_2018.rds")
+rfx.2017 <- read_rds("../data/projection/rfxwOBA_2017.rds")
+
+rfx <- rbind(rfx.2019, rfx.2018, rfx.2017)
+
+saveRDS(rfx, "../data/shiny/rfxwOBA.rds")
+
+fit.2019 <- read_rds("../data/rf/trained_model_by-year.rds")
+fit.2019 <- fit.2019[[3]]
+
+write_rds(fit.2019, "../data/shiny/rf_fit_2019.rds")

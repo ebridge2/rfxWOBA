@@ -17,8 +17,7 @@ library(mltools)
 library(kableExtra)
 library(parallel)
 
-
-fit <- read_rds("../../data/rf/fit_model.rds")
+fit <- read_rds("../../data/shiny/rf_fit_2019.rds")
 
 X <- read_rds("../../data/shiny/model_dat.rds")
 

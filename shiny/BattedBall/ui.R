@@ -45,7 +45,7 @@ shinyUI(fluidPage(
                     min=15,
                     max=40),
        checkboxInput("realPlay",
-                     label="Random Real Play",
+                     label="Random Real Play from 2019",
                      value=FALSE),
        actionButton("plot",
                     label="Predict!")

@@ -1,3 +1,5 @@
+#### Code to get 1000 rfxwOBA samples in serial
+
 library(readr)
 library(tidyverse)
 library(rerf)
