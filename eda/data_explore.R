@@ -1,7 +1,7 @@
 library(tidyverse)
 library(readr)
 library(scales)
-
+select <- dplyr::select
 ## load data
 
 dat <- read_csv("../data/cleaned/model_data_batted.csv")
@@ -167,6 +167,38 @@ dev.off()
 
 
 
+#Types of hits in stadiums
+png("./figs/Stadium/Singles.png", width=720)
+dat %>% filter(outcome=="Single") %>%
+  ggplot(aes(x=factor(stadium), y=..count..)) + 
+  geom_bar() +
+  labs(x="Stadium",
+       title="Number of Singles in each Stadium 2017-2019") 
+dev.off()
+
+png("./figs/Stadium/Doubles.png", width=720)
+dat %>% filter(outcome=="Double") %>%
+  ggplot(aes(x=factor(stadium), y=..count..)) + 
+  geom_bar() +
+  labs(x="Stadium",
+       title="Number of Doubles in each Stadium 2017-2019") 
+dev.off()
+
+png("./figs/Stadium/Triples.png", width=720)
+dat %>% filter(outcome=="Triple") %>%
+  ggplot(aes(x=factor(stadium), y=..count..)) + 
+  geom_bar() +
+  labs(x="Stadium",
+       title="Number of Triples in each Stadium 2017-2019") 
+dev.off()
+
+png("./figs/Stadium/HR.png", width=720)
+dat %>% filter(outcome=="Home run") %>%
+  ggplot(aes(x=factor(stadium), y=..count..)) + 
+  geom_bar() +
+  labs(x="Stadium",
+       title="Number of Home runs in each Stadium 2017-2019") 
+dev.off()
 
 
 

@@ -1,4 +1,4 @@
-#### Code to get 1000 rfxwOBA samples in serial
+#### Code to get 100 rfxwOBA samples in serial
 
 library(readr)
 library(tidyverse)
@@ -7,13 +7,15 @@ library(parallel)
 library(data.table)
 library(mltools)
 
+select <- dplyr::select
+
 dat <- read_csv("../data/cleaned/model_data.csv")
 fit <- readRDS("../data/rf/fit_model.rds")
 
 
 # select numeric features
 X.num <- dat %>%
-  select(-outcome, -pitch_name, -stadium, -if_fielding_alignment, -of_fielding_alignment) %>%
+  select(-year, -outcome, -pitch_name, -stadium, -if_fielding_alignment, -of_fielding_alignment) %>%
   mutate(stand=as.numeric(stand == "R"), p_throws=as.numeric(p_throws == "R"),
          inning_topbot=as.numeric(inning_topbot == "Top"), on_1b_bool=as.numeric(on_1b_bool),
          on_2b_bool=as.numeric(on_2b_bool), on_3b_bool=as.numeric(on_3b_bool)) %>%

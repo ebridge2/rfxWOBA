@@ -1,7 +1,8 @@
 library(readr)
 library(tidyverse)
+select <- dplyr::select
 
-dat <- read_csv("baseball_data.csv")
+dat <- read_csv("../data/raw/baseball_data.csv")
 
 dat <- dat %>% mutate(launch_angle=as.numeric(launch_angle),
                       launch_speed=as.numeric(launch_speed),
@@ -25,26 +26,26 @@ dat <- dat %>% mutate(launch_angle=as.numeric(launch_angle),
                                                            ifelse(events=="walk", "Walk", 
                                                                   ifelse(events=="hit_by_pitch", "Hit by pitch", "Out"))))))))) 
 
-speed.2017 <- read_csv('sprint_speed_2017.csv')
+speed.2017 <- read_csv('../data/raw/sprint_speed_2017.csv')
 speed.2017$year <- 2017
-speed.2018 <- read_csv('sprint_speed_2018.csv')
+speed.2018 <- read_csv('../data/raw/sprint_speed_2018.csv')
 speed.2018$year <- 2018
-speed.2019 <- read_csv('sprint_speed_2019.csv')
+speed.2019 <- read_csv('../data/raw/sprint_speed_2019.csv')
 speed.2019$year <- 2019
 speed <- rbind(speed.2017, speed.2018, speed.2019)
 
-def.2017 <- read_csv('defense_2017.csv')
+def.2017 <- read_csv('../data/raw/defense_2017.csv')
 def.2017$year <- 2017
-def.2018 <- read_csv('defense_2018.csv')
+def.2018 <- read_csv('../data/raw/defense_2018.csv')
 def.2018$year <- 2018
-def.2019 <- read_csv('defense_2019.csv')
+def.2019 <- read_csv('../data/raw/defense_2019.csv')
 def.2019$year <- 2019
 def <- rbind(def.2017, def.2018, def.2019) %>%
   mutate(fg_id=playerid)
 
 dat <- dat %>% left_join(speed, by=c("year", "player_id"))
 
-player_ids <- read_csv('player_id.csv') %>%
+player_ids <- read_csv('../data/raw/player_id.csv') %>%
   mutate(player_id=mlb_id,
          fg_id=as.numeric(fg_id)) %>%
   select(player_id, fg_id)
@@ -110,7 +111,7 @@ dat.batted <- dat %>% filter(outcome %in% c("Single",
                                             "Out")) %>%
   filter(!is.na(woba_denom))
 
-dat.pred <- dat %>% select(release_speed, release_pos_x, release_pos_y, release_pos_z,
+dat.pred <- dat %>% select(game_year, release_speed, release_pos_x, release_pos_y, release_pos_z,
                            zone, stand, p_throws, pfx_x, pfx_z, plate_x, plate_z, 
                            on_1b_bool, on_2b_bool, on_3b_bool, vx0, vy0, vz0,
                            ax, ay, az, balls, strikes, sz_top, sz_bot, launch_speed, 
@@ -121,7 +122,7 @@ dat.pred <- dat %>% select(release_speed, release_pos_x, release_pos_y, release_
                            inning, inning_topbot, sprint_speed, outcome)
 
 dat.pred.batted <- dat.batted %>% 
-  select(release_speed, release_pos_x, release_pos_y, release_pos_z,
+  select(game_year, release_speed, release_pos_x, release_pos_y, release_pos_z,
          zone, stand, p_throws, pfx_x, pfx_z, plate_x, plate_z, 
          on_1b_bool, on_2b_bool, on_3b_bool, vx0, vy0, vz0,
          ax, ay, az, balls, strikes, sz_top, sz_bot, launch_speed, 

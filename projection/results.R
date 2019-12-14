@@ -4,6 +4,8 @@ library(lubridate)
 library(psychometric)
 library(kableExtra)
 
+select <- dplyr::select
+
 #load the clean data
 dat1 <- read_csv("../data/cleaned/model_data.csv")
 
