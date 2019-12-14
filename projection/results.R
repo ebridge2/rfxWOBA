@@ -233,6 +233,10 @@ cor.dat %>% filter(PA >= 100 & PA.next >= 100) %>%
        x="rfxwOBA", y="next season wOBA")
 dev.off()
 
+png("./figs/Marcell_Ozuna_2019_full.png")
+get.rfxwOBA.dist(dat, "Marcell Ozuna", id.dat, 2019, "batter", rfx)
+dev.off()
+
 #### using separate models holding out one year at a time from training set
 
 rfx.2019 <- readRDS('../data/projection/rfxwOBA_2019.rds')
@@ -395,4 +399,9 @@ cor.dat %>% filter(PA >= 100 & PA.next >= 100) %>%
   labs(title="wOBA vs. next season wOBA",
        x="rfxwOBA", y="next season wOBA")
 dev.off()
+
+png("./figs/Marcell_Ozuna_2019_hold.png")
+get.rfxwOBA.dist(dat, "Marcell Ozuna", id.dat, 2019, "batter", rfx)
+dev.off()
+
 

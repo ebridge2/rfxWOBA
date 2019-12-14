@@ -1,5 +1,7 @@
 ---
-title: "baseball"
+title: "rfxwOBA: Using Random Forest to Assess Batter Quality"
+author: "Eric Bridgeford, Joe Catallini, Brian Gilbert, and Jennifer Xu"
+date: "December 14, 2019"
 output: html_document
 ---
 
@@ -403,7 +405,7 @@ The following table displays correlation of each metric to itself in the followi
 
 #### Using models trained with one year held out at a time
 
-We repeated the analysis above, but calculated $rfxwOBA$ for each year in a different way: to calculate $rfxwOBA$ for a given year, we trained the $SPORF$ only on the other two years, out of concern for bias arising from redundant data usage. This procedure left the results nearly identical. (We believe this is due to the fact that year was not included as a predictor, and the probability distributions governing the outcomes and predictors are roughly equal from year to year.) 
+We repeated the analysis above, but calculated $rfxWOBA$ for each year in a different way: to calculate $rfxWOBA$ for a given year, we trained the $SPORF$ only on the other two years, out of concern for bias arising from redundant data usage. This procedure left the results nearly identical. (We believe this is due to the fact that year was not included as a predictor, and the probability distributions governing the outcomes and predictors are roughly equal from year to year.) 
 
 The table below displays $10$ players who had at least $100$ plate appearances in consecutive years from the data set with *wOBA*, *rfxwOBA*, and *bsxwOBA* values from one season and the following season. 
 
@@ -596,13 +598,24 @@ The following table displays correlation of each metric to itself in the followi
 </tbody>
 </table>
 
+Below, we display a plot that shows how this metric might be used. 
+
+![Figure 10: Mike Trout's 2019 rfxwOBA](../projection/figs/Mike_Trout_2019_hold.png)
+
+This plot displays the distribution of $1,000$ *rfxWOBA*'s created in our simulation for Mike Trout in 2019. The blue line displays his *rfxwOBA*, or the average of this distribution, green line displays his *bfxwOBA*, and the red line displays his actual *wOBA* from that season. A plot like this might help a general manager or fantasy baseball team owner assess how they might expect Mike Trout to perform in future seasons.
+
+The following plot shows the rolling values of *wOBA*, *rfxwOBA*, and *bsxwOBA* from 2017-2019.
+
+![Figure 11: Mike Trout's 2017-2019 rolling wOBA, rfxwOBA and bsxwOBA](../projection/figs/Mike_Trout_rolling_hold.png)
+
+This plot displays how *wOBA*, *rfxwOBA*, and *bsxwOBA* follow similar trends over time.
 
 ## Conclusion
 
 
-This paper has accomplished multiple goals. First, we have provided illustrations of how numerous factors are associated with the outcome of baseball plays, although as expected, the most important ones are launch angle, spray angle, and launch speed. We have used this model to generate a statistic, $rfxwOBA$ that is not outcome-oriented, but is highly predictive (in the projective sense) of $wOBA$, one of the most valuable outcome-oriented sabermetric baseball statistics. In fact, in our sample, a player's $rfxwOBA$ correlated more strongly with the next season's $wOBA$ than $wOBA$ itself, although the confidence intervals for these correlations are overlapping. We have approximately matched the performance of Statcast's proprietary analagous expected $wOBA$ measure. We believe our model could be a valuable addition to the repertoire of any baseball official attempting to evaluate MLB batters for the purpose of acquiring the best players for the best price. 
+This paper has accomplished multiple goals. First, we have provided illustrations of how numerous factors are associated with the outcome of baseball plays, although as expected, the most important ones are launch angle, spray angle, and launch speed. We have used this model to generate a statistic, *rfxwOBA* that is not outcome-oriented, but is highly predictive (in the projective sense) of *wOBA*, one of the most valuable outcome-oriented sabermetric baseball statistics. In fact, in our sample, a player's *rfxwOBA* correlated more strongly with the next season's *wOBA* than *wOBA* itself, although the confidence intervals for these correlations are overlapping. We have approximately matched the performance of Statcast's proprietary analagous expected *wOBA* measure. We believe our model could be a valuable addition to the repertoire of any baseball official attempting to evaluate MLB batters for the purpose of acquiring the best players for the best price. 
 
-Some objections may be raised toward the calculation of our expected $wOBA$ metric. First, if batters are able to adjust their swing in response to external factors, then attempting to marginalize over these external factors might not produce a superior metric of batter quality. For example, if a batter adjusted his swing in different ballparks to optimize his outcomes, then attempting to remove the ballpark effects would deny the batter outcomes that he should in fact receive credit for. However, we believe that for the most part batters do not do this, and rather attempt to make similar solid contact with the baseball in nearly all situations.
+Some objections may be raised toward the calculation of our expected *wOBA* metric. First, if batters are able to adjust their swing in response to external factors, then attempting to marginalize over these external factors might not produce a superior metric of batter quality. For example, if a batter adjusted his swing in different ballparks to optimize his outcomes, then attempting to remove the ballpark effects would deny the batter outcomes that he should in fact receive credit for. However, we believe that for the most part batters do not do this, and rather attempt to make similar solid contact with the baseball in nearly all situations.
 
 In addition, shuffling the *pitch* variables while holding batter variables constant is questionable, since the pitch properties are likely also causally responsible for the way the ball leaves the batter's bat. Future analysis could omit pitch variables, or attempt more sophisticated methods to control for them.
 
