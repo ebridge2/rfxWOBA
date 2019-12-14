@@ -19,6 +19,14 @@ require(parallel)
 require(data.table)
 ```
 
+For convenience, a docker container pre-loaded with all of the package dependencies is provided:
+
+```
+docker pull ericwb95/baseball_rf:0.0.1
+docker run --entrypoint /bin/bash -v <path/to/necessary/data>:/project ericwb95/baseball_rf:0.0.1
+R
+```
+these commands will construct a 
 ```{r data_load, eval=FALSE}
 batted.dat <- read_csv('../data/cleaned/model_data_batted.csv')
 ```
