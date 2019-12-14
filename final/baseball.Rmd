@@ -2,24 +2,32 @@
 title: "rfxwOBA: Using Random Forest to Assess Batter Quality"
 author: "Eric Bridgeford, Joe Catallini, Brian Gilbert, and Jennifer Xu"
 date: "December 14, 2019"
-output: html_document
+output:
+  html_document:
+    highlight: tango
+    number_sections: no
+    theme: cosmo
+    toc: yes
+    toc_float: yes
+  pdf_document:
+    toc: yes
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## Introduction
+# Introduction
 
 Readers already familiar with the sport of baseball may prefer to skip to "Project aim."
 
-### What is baseball?
+## What is baseball?
 
 Baseball is a bat-and-ball sport whose modern form originated in the United States in the nineteenth century. It is closely related to bat-and-ball sports of European origin, such as cricket.
 
 While baseball enjoys popularity in many nations (mostly in the Americas and Japan), the United States' Major League Baseball (MLB), founded in 1903, is recognized as the world's premier baseball league. MLB is composed of two "leagues", the National and American Leagues, each divided into three divisions; East, Central and West. There are 30 teams in the MLB, of which 29 are based in the United States and one in Canada. At the conclusion of each baseball season (played roughly from early April to late October), the champions of the National League and the American League compete against each other in a best-of-seven "World Series."
 
-### Rules of baseball
+## Rules of baseball
 
 The rules of baseball may be found at http://mlb.mlb.com/documents/0/8/0/268272080/2018_Official_Baseball_Rules.pdf. What follows is a brief summary of the aspects of the sport necessary to understand the project at hand. Note that for clarity, throughout this paper male pronouns are used when a singular pronoun is called for. (There has never been a female player in the MLB, the organization of interest in this study.)
 
@@ -35,7 +43,7 @@ If a batter reaches base, he may stop at first base, second base, third base or 
 
 The rules governing play beyond this are complex, but they are not crucial to understand the project at hand. 
 
-### Baseball statistics and wOBA
+## Baseball statistics and wOBA
 
 Baseball statistics have been recorded and studied for well over one hundred years. Possibly due to the fact that individual actions are relatively easily separable in baseball (i.e., teammates have less of an effect on each other's individual outcomes than in other sports), baseball has also perhaps been the sport most responsible for the origination and explosion of advanced sports analytics, whereby analysts identify measured player accomplishments that are most likely to translate to runs and wins and apply sophisticated statistical methods to make predictions and inferences about such quantities. A pioneer of this work in the late 20th century was Bill James, honored as one of Time Magazine's 100 most influential people in the world for 2006. Advanced baseball statistics, often known as "sabermetrics," entered into popular culture with Michael Lewis's 2003 bestseller *Moneyball: The Art of Winning an Unfair Game* about the Oakland Athletics' adoption of sabermetric principles, later adapted into the Oscar-nominated 2011 film *Moneyball*.
 
@@ -51,7 +59,7 @@ Therefore, $wOBA$ may be seen as a kind of "gold-standard" batting statistic; a 
 
 *wOBA* weights vary slightly from year-to-year, but for the purposes of this project we use weights that are displayed in the Baseball Savant data set where the data was obtained. Additionally, *wOBA* often includes inputs from the baserunning event, stolen bases. In this project we do not considering these events. Note that this means that our calculations of true *wOBA* may differ slightly from those published on popular baseball statistic websites.
 
-### Project aim
+## Project Aim
 
 Although $wOBA$ is a very useful statistic because it attempts to tie batter outcomes directly to run production, it is still "outcome-oriented" in that it is purely a function of the batter's game-recorded outcomes. Outcome-oriented statistics are convenient and justifiable in the longterm, but they are not necessarily optimal for player evaluation and the prediction of future results.
 
@@ -65,7 +73,7 @@ This concept is not new; the analytics firm at Statcast calculates a statistic c
 
 The intended audience for this project ranges from baseball fans interested in learning more about baseball and what factors influence each play to baseball analysts who are interested in creating increasingly valuable methods in evaluating batter performance.
 
-### Data 
+# Data 
 
 $554,149$ samples of baseball event data are collected from [Baseball Savant](https://baseballsavant.mlb.com/statcast_search). For this investigation, we are interested in event-related batted ball-outcomes; that is, those at-bats that end with either i) an out , ii) a single, iii) a double, iv) a triple, or v) a home run. (Technically, an event recorded as an "out" may have been a fielding error that allowed the batter to reach base.) $377,050$ ($68.6\%$) of the samples produced a batted ball event. Predictors of interest are broken into two categories: those that the batter controls at least partially, and those the batter does not control. $100\%$ of the dataset contains valid outcome variables, whereas $4.6\%$ of the dataset contains incomplete predictor rows. The dataset consists of of $239,521$ ($66.5\%$) of outs, $75,935$ ($21.1\%$) of singles, $24,345$ ($6.7\%$) of doubles, $2356$ ($.6\%$) of triples, and $17,624$ ($4.9\%$) of home runs. The predictors of interest are organized as follows:
 
@@ -103,9 +111,9 @@ $554,149$ samples of baseball event data are collected from [Baseball Savant](ht
 In the data set, $360,967$ batted ball events contained complete data for all the predictors listed above. This subset of the data was used for model training.
   
     
-## Exploratory analysis
+# Exploratory analysis
 
-### Launch Angle & Launch Speed
+## Launch Angle & Launch Speed
 
 Since the advent of Statcast, launch angle and launch speed have widely been considered the best indicators of batted ball quality; some combinations of launch speed and angle are recognized to tend to produce particular outcomes. The relationship between launch speed, angle, and outcome is shown in the plot below.
 
@@ -113,7 +121,7 @@ Since the advent of Statcast, launch angle and launch speed have widely been con
 
 In this plot, we color the outcome of each batted ball from 2017-2019 and plot them by their launch angle and launch speed. A launch angle of $0$ degrees indicates a batted ball hit exactly parallel with the ground, a launch angle of $-90$ degrees indicates a batted ball hit directly down toward the ground, and a launch angle of $90$ degrees indicates a batted ball hit directly upwards away from the ground. We can see that home runs tend to be hit between launch angles of $20$ and $40$ degrees and launch speeds near or above $100$ miles per hour.
 
-### Spray Angle and Launch Speed
+## Spray Angle and Launch Speed
 
 We also believe that spray angle, or the horizontal direction in the field that the batter hits the ball may be important in determining the outcome. The relationship between spray angle, launch speed, and outcome is shown in the plot below.
 
@@ -121,7 +129,7 @@ We also believe that spray angle, or the horizontal direction in the field that 
 
 In Figure 2, we color the outcome of each batted ball from 2017-2019 and plot them by their launch angle and launch speed. A spray angle of $0$ degrees indicates a batted ball hit directly toward the pitcher's mound, a launch angle of $-45$ degrees indicates a batted ball hit directly toward third base, and a launch angle of $45$ degrees indicates a batted ball hit directly toward first base. One takeaway from this plot is that a relatively large mass of doubles occur from batted balls hit with launch speed near or above $90$ miles per hour and spray angle nearly directly toward first or third base.
 
-### Sprint Speed
+## Sprint Speed
 
 We also believe that the top sprint speed of a player may be important in their batted ball outcomes since a faster player might be able to reach a farther base given the same batted ball and fielding behavior. Below we display a plot of the densities of batter sprint speed for each batted ball outcome.
 
@@ -129,7 +137,7 @@ We also believe that the top sprint speed of a player may be important in their 
 
 In Figure 3 we can see that the distribution of sprint speed is extremely similar for every type of batted ball outcomes except for triples, which generally result from batters who have higher top sprint speeds. Therefore, sprint speed may be a useful predictor only of triples, which we note are a rare outcome.
 
-### Defense
+## Defense
 
 Fielding (defense) quality may also influence outcomes; good fielders might limit batters to worse outcomes, all else equal. To visualize this relationship we created boxplots to observe the distribution of player DRS per $1,000$ innings (a measure intended to capture fielding quality) for each position across each of the outcomes. Shortstops are often considered the most important defensive position on the field, so below we display the distributions of shortstop DRS per $1,000$ innings for each batted ball outcome.
 
@@ -143,7 +151,7 @@ Below we display the distributions of right fielders' DRS per $1,000$ innings fo
 
 From this plot we can see that on triples, the median DRS per $1,000$ innings of the right fielder tends to be lower than on other batted ball events. This is fairly intuitive because the right fielder is the position furthest from third base, which is where the batter must reach in order to acheive a triple. So, right fielders who are less skilled or slower at getting to a batted ball in right field allow the batter a relatively long period of time to reach third base. As in the case of sprint speed, defensive quality (specifically of right fielders) may be useful only in predicting the rare outcome of triples.
 
-### Stadium
+## Stadium
 
 Unlike in most sports, baseball stadiums are generally allowed to vary in their dimensions from place to place. For example, the Red Sox' stadium, Fenway Park, is famously home to the "Green Monster," a left-field wall much higher and much closer to the infield than is the case in any other ballpark. Additionally, climate may affect outcomes, as baseballs tend to travel farther through air at lower pressure. For those reasons, batted ball outcome may be associated with the stadium in which the game is being played.
 
@@ -157,20 +165,20 @@ Another interesting outcome to explore is the frequency of triples by stadium, s
 
 We observe a relatively high number of triples in a handful of stadiums, such as the stadiums in Arizona, Detroit, San Francisco, and especially Colorado.
 
-## Model
+# Model
 
 For this analysis, we chose to employ a Random Forest that inputs the predictors described above to predict one of the five batted ball outcomes. In the Random Forest model, we only considered batted balls that contained values for all the predictors above. 
 
 One reason for choosing a Random Forest is that many of the predictors are highly non-linear and interactive in their propensity to produce certain outcomes, so any kind of additive model would be inadequate without including many interaction and higher-order terms. (This fact is convincingly demonstrated by Figures 1 and 2.) Further, the Random Forest handles large feature spaces easily and with a relatively low danger of overfitting. This is important for our task at hand, since we want to discover interesting predictors out of the large set of cutting-edge measurements made available to us by Statcast, but we believe that most of the included features will be considerably less predictive than launch speed, launch angle, and spray angle.
 
-### SPORF
+## SPORF
 
 The particular implementation of Random Forest employed is [SPORF](https://arxiv.org/abs/1506.03410), or Sparse Projection Oblique Randomer Forests. Traditional Random Forests build upon the axis-aligned decision tree: that is, the trees split only along features that exist within the feature space of the dataset of interest. By contrast, oblique decision trees extend the split criterion along one or more features. For a simple example, consider where we wish to predict whether it is raining today, based on the knowledge that it rained yesterday and it is forecasted to rain tomorrow. Each of these pieces of information is individually valuable, but the evidence they provide in conjunction may be considerably stronger. Of course, an axis-aligned decision tree may well be capable of generating trees that can recognize this particular pattern. However, as the feature space widens, the tree depth to identify these "oblique" tendencies in the feature space grow exponentially. Trees of substantial depth unfortunately tend to lose generalizability and have a tendency to overfit the sample data. Fortunately, numerous strategies (for example, [XGBoost](https://arxiv.org/abs/1603.02754)) have been introduced to generate "oblique" ensembles: random forests built upon decision trees wholse split criterions include linear combinations, rotations, and other transforms of the individual features. SPORF was developed to accomodate these oblique strategies, while providing many of the computational benefits of a traditional axis-aligned method (particularly, computational efficiency, insensitivity to a large proportion of noisy inputs, and interpretability). For these reasons, as well as the ease-of-use of `SPORF` in the `R` programming language and heavy `C` optimization, we choose to use `SPORF`s for our project.
 
 The codebase for `SPORF` may be found at https://neurodata.io/sporf/.
 
 
-### rfxwOBA
+## rfxwOBA
 
 As stated above, we will use the results of the random forest model to produce our own expectation of *wOBA*. In order to produce this, we will use a permutation strategy to create a marginal distribution of expected *wOBA* for each batted ball event. The process will be executed as follows:
 
@@ -190,9 +198,9 @@ In order to assess the validity of this metric for projecting a player's future 
 
 The data exported from Baseball Savant also includes a column labeled `estimated_woba_using_speedangle` for each event. There is not documentation on how these values are calculated. We also produce expected *wOBA* values from these values, referred to as "baseball savant expected wOBA" or *bsxwOBA*. We also consider this metric in assessing player projection and metric reliability.
 
-## Results
+# Results
 
-### Random Forest Prediction of Event Outcomes
+## Random Forest Prediction of Event Outcomes
 
 Random Forests are trained using the $359,781$ samples of complete-predictor batted-ball event data. The feature space is expanded to $96$ features of interest, consisting of the afforementioned features. Categorical features which are $1$ of $K$ possible unordered labels (for example, the stadium in which the game was played, in which there are $32$ possible stadiums, and the first indexed stadium does not have any meaningful relationship over the $K^{th}$ indexed stadium) are $1$-hot encoded; that is, a feature is developed for batted-balls in stadium $1, ..., K$. The one-hot-encoded features associated with a single categorical set are then associated and passed into the random forest, which accounts for the fact that $K$ features in the data are associated with a single native feature when considering a split. For model evaluation, we perform traditional $50$-fold Cross Validation, in which we separate the samples randomly into $50$ folds, and for iterations $i=1, ..., 50$, train the model on all folds $j \neq i$, and use the $i^{th}$ fold as the testing set. The purpose of this approach is primarily for developing insights into how effectively, the model is making predictions, and in particular, where and when it is getting predictions wrong. We evaluate our strategy using a Confusion Matrix. A confusion matrix is constructed by generating a $K\times K$ matrix, where the row-wise entries are the predicted outcomes, and the column-wise entries are the true outcomes. A single $(i, j)$ entry represents the fraction times the true items of class $j$ are predicted to be part of the $i^{th}$ class. Ideally, an effective model will have true outcomes predominantly being predicted into the correct class, in which the on-diagonal entries will exceed the off-diagonal entries. The [Model Validation Appendix](#model-fitting-and-validation) provides details as to the specific procedure for fitting and evaluation.
 
@@ -200,18 +208,18 @@ Random Forests are trained using the $359,781$ samples of complete-predictor bat
 
 Second, we compare our model to the "random guess" classifier, which simply guesses the maximally proportionate class. An effective classifier will certainly outperform the "random guess" classifier, so this serves as an effective benchmark for a minimal acceptable classification accuracy. The average accuracy is $79.0\pm.4\%$, whereas the random guess classifier has only $66.6\pm .6\%$ accuracy, indicating that our SPORF classifier substantially outperforms the random guess classifier. 
 
-### Random Forest Feature Importances
+## Random Forest Feature Importances
 
 Further, we are concerned with discerning which features provide meaningful insights into our predictive task. To this extent, we consider two popular metrics for evaluating the "importance" of features: the Gini importance (G, for Gini) and simply counting the number of times a feature is used across the forest (C, for count). Unlike the count strategy, the gini importance weights a feature's importance by how much it improves the purity a resulting split criterion divides the sample data at a particular node (that is, how much it improves the separation of classes within the dataset). For instance in a $2$ class problem, if a particular feature and threshold chosen at a particular node divides the data evenly into the two classes, this feature would receive a high importance, whereas a feature and threshold chosen at a particular node that does little to divide between the two classes would have a lower importance. Both strategies are popular for determining the importance of features leveraged in a Random Forest.
 
 ![Figure 9: Assessing the relative importance of features, as determined by the Gini Importance Metric or the Count Metric. Both metrics are normalized across features by the maximum for each respective metric, to make the scales comparable. The top ten features by importance are identical across both Gini and the Count metric. Of note, the Gini clearly places higher relative importance on the Launch Angle, which has the interpretation that the launch angle is extremely effective for creating splits that result in more pure sub-samples at nodes within the random forest.](../rf/figs/feat_imp.png)
 
 
-### rfxwOBA
+## rfxwOBA
 
-#### Projection
+### Projection
 
-#### Using a model trained on all complete data
+### Using a model trained on all complete data
 
 The table below displays $10$ players who had at least $100$ plate appearances in consecutive years from the data set with *wOBA*, *rfxwOBA*, and *bsxwOBA* values from one season and the following season. 
 
@@ -403,7 +411,7 @@ The following table displays correlation of each metric to itself in the followi
 </tbody>
 </table>
 
-#### Using models trained with one year held out at a time
+### Using models trained with one year held out at a time
 
 We repeated the analysis above, but calculated $rfxWOBA$ for each year in a different way: to calculate $rfxWOBA$ for a given year, we trained the $SPORF$ only on the other two years, out of concern for bias arising from redundant data usage. This procedure left the results nearly identical. (We believe this is due to the fact that year was not included as a predictor, and the probability distributions governing the outcomes and predictors are roughly equal from year to year.) 
 
@@ -610,7 +618,7 @@ The following plot shows the rolling values of *wOBA*, *rfxwOBA*, and *bsxwOBA* 
 
 This plot displays how *wOBA*, *rfxwOBA*, and *bsxwOBA* follow similar trends over time.
 
-## Conclusion
+# Conclusion
 
 
 This paper has accomplished multiple goals. First, we have provided illustrations of how numerous factors are associated with the outcome of baseball plays, although as expected, the most important ones are launch angle, spray angle, and launch speed. We have used this model to generate a statistic, *rfxwOBA* that is not outcome-oriented, but is highly predictive (in the projective sense) of *wOBA*, one of the most valuable outcome-oriented sabermetric baseball statistics. In fact, in our sample, a player's *rfxwOBA* correlated more strongly with the next season's *wOBA* than *wOBA* itself, although the confidence intervals for these correlations are overlapping. We have approximately matched the performance of Statcast's proprietary analagous expected *wOBA* measure. We believe our model could be a valuable addition to the repertoire of any baseball official attempting to evaluate MLB batters for the purpose of acquiring the best players for the best price. 
