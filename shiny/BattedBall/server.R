@@ -17,11 +17,11 @@ library(mltools)
 library(kableExtra)
 library(parallel)
 
-fit <- read_rds("https://github.com/ebridge2/rfxWOBA/data/shiny/rf_fit_2019.rds")
+fit <- readRDS("../../data/shiny/rf_fit_2019.rds")
 
-X <- read_rds("https://github.com/ebridge2/rfxWOBA/data/shiny/model_dat.rds")
+X <- readRDS("../../data/shiny/model_dat.rds")
 
-descriptions <- read_rds("https://github.com/ebridge2/rfxWOBA/data/shiny/descriptions.rds")
+descriptions <- read_rds("../../data/shiny/descriptions.rds")
 
 idx.cc <- which(complete.cases(X))
 
