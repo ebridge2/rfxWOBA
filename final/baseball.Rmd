@@ -651,11 +651,11 @@ For convenience, a docker container pre-loaded with all of the package dependenc
 
 ```
 docker pull ericwb95/rfxwOBA:0.0.1
-docker run --entrypoint /bin/bash -v <path/to/repository/?/rfxwOBA:/project ericwb95/rfxwOBA:0.0.1
+docker run --entrypoint /bin/bash -v <path/to/repository/rfxwOBA:/project ericwb95/rfxwOBA:0.0.1
 R
 ```
 
-these commands will pull in the docker container, with availability to the necessary data that can be used to run the below code segments. The base directory that is passed via the `-v` argument should be the root directory where the repository is cloned on the user's local machine, with the terminal directory `rfxwOBA`. Note: the below sections are largely commented out, as fitting of the models in a feasible time frame consisted of deploying the analysis across $5$ computers featuring $400$ cores, and approximately $2$ TB of RAM cumulatively, and required in excess of $20,000$ core hours (number of cores$\cdot$time elapsed).
+these commands will pull in the docker container, with availability to the necessary data that can be used to run the below code segments. The base directory that is passed via the `-v` argument should be the root directory where the repository is cloned on the user's local machine, with the terminal directory `rfxwOBA`. Note: the below sections are largely set to `eval=FALSE`, as fitting of the models in a feasible time frame consisted of deploying the analysis across $5$ computers featuring $400$ cores, and approximately $2$ TB of RAM cumulatively, and required in excess of $20,000$ core hours (number of cores$\cdot$time elapsed).
 
 ```{r data_load, eval=FALSE}
 batted.dat <- read_csv('../data/cleaned/model_data_batted.csv')
