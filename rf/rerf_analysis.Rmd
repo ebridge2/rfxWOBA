@@ -258,7 +258,6 @@ saveRDS(forests, '../data/rf/trained_model_by-year.rds')
 ```{r eval_scripts}
 folds.res <- readRDS('../data/rf/rf_results_folds.rds')
 
-years.res <- readRDS('../data/rf/rf_results_year.rds')
 # a function for generating a confusion matrix
 conf.mtx.plot <- function(dat) {
   dat %>%
@@ -267,7 +266,7 @@ conf.mtx.plot <- function(dat) {
     # summarize with the means per true/predicted pair
     summarize(Proportion=mean(percent), Std=sd(percent)) %>%
     # construct label for each cell of confusion matrix
-    mutate(Percentage=sprintf("%.1f±%.1f %%", 100*Proportion, 100*Std)) %>%
+    mutate(Percentage=sprintf("%.1f %%", 100*Proportion)) %>%
     ggplot(aes(x=True, y=Prediction, fill=100*Proportion)) +
       geom_tile() +
       geom_text(aes(x = True, y = Prediction, label=Percentage)) +
